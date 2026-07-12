@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional, ClassVar, Generic, Type, Self, TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, JsonValue, model_validator
-from utils import classproperty
+
+from ..utils import classproperty
 from ..types import ApiType
 
 
@@ -27,6 +28,7 @@ class ApiMethod(BaseModel, Generic[ApiType], ABC):
         use_enum_values=True, 
         populate_by_name=True, 
         arbitrary_types_allowed=True, 
+        ignored_types=(classproperty,)
     )
 
     if TYPE_CHECKING:
@@ -35,7 +37,7 @@ class ApiMethod(BaseModel, Generic[ApiType], ABC):
     else:
         @property
         @abstractmethod
-        def __returning__(self) -> [Type[ApiType]]:
+        def __returning__(self) -> Type[ApiType]:
             pass
         @property
         @abstractmethod
@@ -45,7 +47,6 @@ class ApiMethod(BaseModel, Generic[ApiType], ABC):
     @classproperty(cached=True)
     def name(cls):
         return cls.__name__
-    
 
 __all__ = (
     "Response", 
