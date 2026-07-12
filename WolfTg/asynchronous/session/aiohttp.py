@@ -5,9 +5,7 @@ from ...typings import Number
 from .session import AsyncIoSession
 
 
-import ssl
 import asyncio
-import certifi
 
 
 
@@ -27,7 +25,6 @@ class AiohttpSession(AsyncIoSession):
         self._timeout = ClientTimeout(total=float(self.timeout))
         self._session: Optional[ClientSession] = None
         self._connector_init = {
-            "ssl": ssl.create_default_context(cafile=certifi.where()),
             "limit": limit, 
             "limit_per_host": limit_per_host, 
             "ttl_dns_cache": ttl_dns_cache, 

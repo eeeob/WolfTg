@@ -18,7 +18,7 @@ import asyncio
 import logging
 
 if TYPE_CHECKING:
-    from ..client import AsyncioClient
+    from ..client import AsyncClient
 
 
 
@@ -33,7 +33,7 @@ class AsyncIoSession(abc.ABC):
 
     def __init__(
         self, 
-        client: "AsyncioClient", 
+        client: "AsyncClient", 
         retries: int = RETRIES, 
         timeout: Number = TIMEOUT, 
         sleep_threshold: Number = SLEEP_THRESHOLD

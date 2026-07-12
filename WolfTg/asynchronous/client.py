@@ -10,7 +10,7 @@ from .session import AsyncIoSession, AiohttpSession
 
 
 
-class AsyncioClient:
+class AsyncClient:
     def __init__(
         self, 
         api_key: str, 

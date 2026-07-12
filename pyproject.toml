@@ -1,34 +1,64 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-
 [project]
 name = "WolfTg"
 dynamic = ["version"]
-requires-python = ">=3.12"
-authors = [{ name = "Abdullah", email = "aldheeb01@gmail.com" }]
+description = "Official Python SDK for the WolfTg API."
 readme = "README.md"
+requires-python = ">=3.12"
 
-
-dependencies = [
-    "certifi==2025.11.12", 
-    "requests==2.32.5", 
-    "pydantic>=2.0", 
-    "aiohttp[speedups]==3.11.11", 
-    "aldheeb-pytools[country,phone]==0.2.18", 
-
+authors = [
+    { name = "Abdullah", email = "aldheeb01@gmail.com" }
 ]
 
+license = { text = "MIT" }
+
+keywords = [
+    "wolftg",
+    "wolf-tg",
+    "telegram",
+    "telegram-api",
+    "api",
+    "sdk",
+    "client",
+    "asyncio",
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+
+    "Framework :: AsyncIO",
+
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "requests>=2.32,<3.0",
+    "pydantic>=2.7,<3.0",
+    "aiohttp[speedups]>=3.9,<4.0",
+    "aldheeb-pytools[country,phone]>=0.2.15",
+]
 
 [project.urls]
-"Homepage" = "https://github.com/eeeob/WolfTg"
+Homepage = "https://github.com/eeeob/WolfTg"
+Repository = "https://github.com/eeeob/WolfTg"
+Issues = "https://github.com/eeeob/WolfTg/issues"
+API = "https://wolf-tg.com/api/docs"
 
 
 [project.optional-dependencies]
 dev = [
-    "hatch<=1.16.5",
-    "twine<=6.2.0",
+    "hatch>=1.16,<2.0",
+    "twine>=6.1,<7.0",
 ]
 
 
