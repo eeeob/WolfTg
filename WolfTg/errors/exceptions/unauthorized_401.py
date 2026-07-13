@@ -10,7 +10,7 @@ class Unauthorized(ApiError):
     NAME = __doc__
 
 class SessionPasswordNeeded(Unauthorized):
-    """Two-step verification password is required to complete authentication for {value[0]}. password hint: {value[1]}. You have {value[2]} attempts remaining Within {value[3]} seconds"""
+    """Two-step verification password is required to complete authentication for {value[account]}. Password hint: {value[hint]}. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"""
     ID = "SESSION_PASSWORD_NEEDED"
     """``str``: Error ID"""
     MESSAGE = __doc__
@@ -33,18 +33,6 @@ class UserApiKeyRevoked(Unauthorized):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class UserApiKeyOwnerNotFound(Unauthorized):
-    """Api key owner not found"""
-    ID = "USER_API_KEY_OWNER_NOT_FOUND"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
-class InvalidOwnerApiKey(Unauthorized):
-    """Owner api key is invalid"""
-    ID = "INVALID_OWNER_API_KEY"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 class MissingAuthenticationHeaders(Unauthorized):
     """Authentication headers are missing"""
     ID = "MISSING_AUTHENTICATION_HEADERS"
@@ -64,8 +52,6 @@ __all__ = (
     "UserApiKeyInvalid", 
     "UserApiKeyNotFound", 
     "UserApiKeyRevoked", 
-    "UserApiKeyOwnerNotFound", 
-    "InvalidOwnerApiKey", 
     "MissingAuthenticationHeaders", 
     "OrderAccessDenied", 
 )

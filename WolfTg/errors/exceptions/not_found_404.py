@@ -22,7 +22,7 @@ class NotFoundOtpCode(NotFound):
     MESSAGE = __doc__
 
 class OrderNotFound(NotFound):
-    """Order not found"""
+    """Order {value} not found"""
     ID = "ORDER_NOT_FOUND"
     """``str``: Error ID"""
     MESSAGE = __doc__

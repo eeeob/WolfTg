@@ -5,6 +5,7 @@ from .bad_request_400 import *
 from .unauthorized_401 import * 
 from .forbidden_403 import * 
 from .not_found_404 import * 
+from .method_not_allowed_405 import * 
 from .conflict_409 import * 
 from .flood_420 import * 
 from .internal_server_error_500 import * 
@@ -16,6 +17,7 @@ __all__ = (
     *unauthorized_401.__all__, 
     *forbidden_403.__all__, 
     *not_found_404.__all__, 
+    *method_not_allowed_405.__all__, 
     *conflict_409.__all__, 
     *flood_420.__all__, 
     *internal_server_error_500.__all__, 

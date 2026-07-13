@@ -10,7 +10,7 @@ class BadRequest(ApiError):
     NAME = __doc__
 
 class InvalidVerificationCode(BadRequest):
-    """The verification code is invalid. You have {value[0]} attempts remaining Within {value[1]} seconds"""
+    """The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"""
     ID = "INVALID_VERIFICATION_CODE"
     """``str``: Error ID"""
     MESSAGE = __doc__
@@ -28,13 +28,13 @@ class InvalidPhoneNumber(BadRequest):
     MESSAGE = __doc__
 
 class InvalidPassword(BadRequest):
-    """The password is invalid. You have {value[0]} attempts remaining Within {value[1]} seconds. Hint: {value[2]}"""
+    """The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}"""
     ID = "INVALID_PASSWORD"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
 class ChangedPassword(BadRequest):
-    """The password is Changed. You have {value[0]} attempts remaining Within {value[1]} seconds. Hint: {value[2]}"""
+    """The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}"""
     ID = "CHANGED_PASSWORD"
     """``str``: Error ID"""
     MESSAGE = __doc__
@@ -46,7 +46,7 @@ class InvalidContentType(BadRequest):
     MESSAGE = __doc__
 
 class InvalidUserId(BadRequest):
-    """User id is invalid"""
+    """User id {value} is invalid"""
     ID = "INVALID_USER_ID"
     """``str``: Error ID"""
     MESSAGE = __doc__

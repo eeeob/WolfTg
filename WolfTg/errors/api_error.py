@@ -1,4 +1,4 @@
-from typing import Any, Optional, Never, TYPE_CHECKING
+from typing import Any, Optional, Never, ClassVar, TYPE_CHECKING
 
 from .exceptions.all import exceptions as exceptions_dict
 from . import exceptions
@@ -13,20 +13,22 @@ class ApiError(Exception):
     NAME = None
     MESSAGE = "{value}"
 
+    STORE_VALUE: ClassVar[bool] = True
+
     def __init__(
         self, 
         value: Optional[Any] = None, 
         method_name: Optional[str] = None, 
         ):
 
-        super().__init__("Api says: [{} {}] - {} {}".format(
+        super().__init__("WolfTg says: [{} {}] - {} {}".format(
             self.CODE, 
             self.ID or self.NAME, 
-            self.MESSAGE.format(value=value), 
-            f'(caused by "{method_name}")' if method_name else ""
+            self.MESSAGE.format(value=value) if self.STORE_VALUE else value, 
+            f'(caused by "{method_name}")' if method_name else "" 
         ))
 
-        self.value = value
+        self.value = value if self.STORE_VALUE else None
 
     @staticmethod
     def raise_it(
@@ -51,11 +53,11 @@ class ApiError(Exception):
                 value=f"[{error_code} {error_message}]", 
                 method_name=method_name 
             )
-
-        value = response.error_value
         
-        raise getattr(exceptions, exceptions_dict[error_code][error_id])(
-            value=value, 
+        error_cls = getattr(exceptions, exceptions_dict[error_code][error_id])
+        
+        raise error_cls(
+            value=response.error_value if error_cls.STORE_VALUE else error_message, 
             method_name=method_name 
         )
 

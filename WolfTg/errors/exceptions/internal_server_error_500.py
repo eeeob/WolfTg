@@ -10,16 +10,18 @@ class InternalServerError(ApiError):
     NAME = __doc__
 
 class TelegramError(InternalServerError):
-    """Unknow Telegram service error occurred. Error: {value}"""
+    """Unknow Telegram service error occurred. Error: {context}"""
     ID = "TELEGRAM_ERROR"
     """``str``: Error ID"""
     MESSAGE = __doc__
+    STORE_VALUE = False
 
 class UnknowError(InternalServerError):
-    """Unknow error occurred. Error: {value}"""
+    """Unknow error occurred. Error: {context}"""
     ID = "UNKNOW_ERROR"
     """``str``: Error ID"""
     MESSAGE = __doc__
+    STORE_VALUE = False
 
 
 

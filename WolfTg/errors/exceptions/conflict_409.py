@@ -22,16 +22,18 @@ class ExpiredStat(Conflict):
     MESSAGE = __doc__
 
 class AccountForSellSectionClosed(Conflict):
-    """Selling is not allowed for {value[0]} {value[1]} account section at the moment"""
+    """Selling is not allowed for {context[country]} country {context[section]} account section at the moment"""
     ID = "ACCOUNT_FOR_SELL_SECTION_CLOSED"
     """``str``: Error ID"""
     MESSAGE = __doc__
+    STORE_VALUE = False
 
 class AccountForBuySectionClosed(Conflict):
-    """Buying is not allowed for {value[0]} {value[1]} account section at the moment"""
+    """Buying is not allowed for {context[country]} country {context[section]} account section at the moment"""
     ID = "ACCOUNT_FOR_BUY_SECTION_CLOSED"
     """``str``: Error ID"""
     MESSAGE = __doc__
+    STORE_VALUE = False
 
 class SessionAlreadyExists(Conflict):
     """A session already exists for this phone number"""
