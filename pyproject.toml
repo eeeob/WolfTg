@@ -50,7 +50,7 @@ dependencies = [
     "requests>=2.32,<3.0",
     "pydantic>=2.7,<3.0",
     "aiohttp[speedups]>=3.9,<4.0",
-    "aldheeb-pytools[country,phone]>=0.2.15",
+    "aldheeb-pytools[country,phone]>=0.3.0,<0.4",
 ]
 
 [project.urls]
@@ -64,11 +64,13 @@ API = "https://wolf-tg.com/api/docs"
 dev = [
     "hatch>=1.16,<2.0",
     "twine>=6.1,<7.0",
+    "pytest>=8.0,<9.0",
+    "pytest-asyncio>=0.24,<1.0",
 ]
 
 
 [tool.hatch.build.targets.sdist]
-exclude = [".github/"]
+only-include = ["WolfTg", "README.md", "LICENSE"]
 
 [tool.hatch.version]
 path = "WolfTg/__meta__.py"
@@ -80,3 +82,7 @@ allow-direct-references = true
 [tool.hatch.build.targets.wheel]
 ignore-vcs = true
 packages = ["WolfTg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

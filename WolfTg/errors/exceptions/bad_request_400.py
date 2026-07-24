@@ -60,6 +60,7 @@ class InvalidSection(BadRequest):
 
 
 __all__ = (
+    "BadRequest", 
     "InvalidVerificationCode", 
     "ExpiredVerificationCode", 
     "InvalidPhoneNumber", 

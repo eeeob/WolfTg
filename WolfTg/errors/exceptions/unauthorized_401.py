@@ -48,6 +48,7 @@ class OrderAccessDenied(Unauthorized):
 
 
 __all__ = (
+    "Unauthorized", 
     "SessionPasswordNeeded", 
     "UserApiKeyInvalid", 
     "UserApiKeyNotFound", 

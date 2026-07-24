@@ -12,5 +12,6 @@ class MethodNotAllowed(ApiError):
 
 
 __all__ = (
+    "MethodNotAllowed", 
 )
 

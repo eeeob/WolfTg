@@ -26,6 +26,7 @@ class UnknowError(InternalServerError):
 
 
 __all__ = (
+    "InternalServerError", 
     "TelegramError", 
     "UnknowError", 
 )

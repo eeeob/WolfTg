@@ -60,6 +60,7 @@ class UserBannedFromBuying(Forbidden):
 
 
 __all__ = (
+    "Forbidden", 
     "InvalidSellerAccountOwner", 
     "InvalidBuyerAccountOwner", 
     "InvalidRequester", 

@@ -18,6 +18,7 @@ class ApiUnavailable(ServiceUnavailable):
 
 
 __all__ = (
+    "ServiceUnavailable", 
     "ApiUnavailable", 
 )
 
