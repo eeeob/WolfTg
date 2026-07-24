@@ -50,7 +50,7 @@ dependencies = [
     "requests>=2.32,<3.0",
     "pydantic>=2.7,<3.0",
     "aiohttp[speedups]>=3.9,<4.0",
-    "aldheeb-pytools[country,phone]>=0.3.0,<0.4",
+    "aldheeb-pytools[country,phone]>=0.3.1,<0.4",
 ]
 
 [project.urls]
