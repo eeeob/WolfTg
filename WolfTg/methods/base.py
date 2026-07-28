@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Optional, ClassVar, Generic, Type, Self, TYPE_CHECKING
-from pydantic import BaseModel, ConfigDict, JsonValue, model_validator
+from typing import Optional, ClassVar, Generic, Type, Self, Any, Dict, TYPE_CHECKING
+from pydantic import BaseModel, ConfigDict, JsonValue, model_validator, PrivateAttr
 
-from ..utils import classproperty
 from ..types import ApiType
 
 
@@ -28,7 +27,6 @@ class ApiMethod(BaseModel, Generic[ApiType], ABC):
         use_enum_values=True, 
         populate_by_name=True, 
         arbitrary_types_allowed=True, 
-        ignored_types=(classproperty,)
     )
 
     if TYPE_CHECKING:
@@ -41,12 +39,22 @@ class ApiMethod(BaseModel, Generic[ApiType], ABC):
             pass
         @property
         @abstractmethod
-        def __request_method__(self) -> ClassVar[str]:
+        def __request_method__(self) -> str:
             pass
 
-    @classproperty(cached=True)
-    def name(cls):
-        return cls.__name__
+    _context: Optional[Dict[str, Any]] = PrivateAttr(default=None)
+
+    @property
+    def context(self) -> Optional[Dict[str, Any]]:
+        return self._context
+
+    def with_ctx(self, **context: Any) -> Self:
+        if context:
+            if self._context is None:
+                self._context = {}
+            self._context.update(context)
+        return self
+
 
 __all__ = (
     "Response", 
