@@ -23,7 +23,7 @@ class ApiConfig:
         return RequestData(
             method=api_method.__request_method__.upper(), 
             headers={self.api_key_header: api_key}, 
-            url=self.base_url.format_map({"api_method": api_method.name}), 
+            url=self.base_url.format_map({"api_method": type(api_method).__name__}), 
             json_data=api_method.model_dump()
         )
 
