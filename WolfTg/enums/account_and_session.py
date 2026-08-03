@@ -1,4 +1,6 @@
-from enum import auto, StrEnum
+from enum import auto
+
+from .._compat import StrEnum
 
 class AccountOperation(StrEnum):
     SELL = auto()

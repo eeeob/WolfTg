@@ -8,7 +8,7 @@ name = "WolfTg"
 dynamic = ["version"]
 description = "Official Python SDK for the WolfTg API."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 
 authors = [
     { name = "Abdullah", email = "aldheeb01@gmail.com" }
@@ -35,6 +35,8 @@ classifiers = [
 
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
@@ -51,6 +53,7 @@ dependencies = [
     "pydantic>=2.7,<3.0",
     "aiohttp[speedups]>=3.9,<4.0",
     "aldheeb-pytools[country,phone]>=0.3.2,<0.4",
+    "typing-extensions>=4.0; python_version < '3.11'",
 ]
 
 [project.urls]

@@ -1,4 +1,6 @@
-from typing import Any, Optional, Never, ClassVar, TYPE_CHECKING
+from typing import Any, Optional, ClassVar, TYPE_CHECKING
+
+from .._compat import Never
 
 from .exceptions.all import exceptions as exceptions_dict
 from . import exceptions

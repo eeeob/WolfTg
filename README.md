@@ -16,7 +16,7 @@ WolfTg provides a simple and modern interface for interacting with the WolfTg AP
 
 ## Requirements
 
-* Python 3.12 or newer
+* Python 3.10 or newer
 
 ## Installation
 
