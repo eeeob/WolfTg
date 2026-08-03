@@ -2,6 +2,7 @@ from typing import Optional
 
 from requests.adapters import HTTPAdapter
 from requests import Session as ReqSession
+from requests.exceptions import Timeout as ReqTimeout
 
 from .session import Session
 
@@ -30,14 +31,19 @@ class RequestsSession(Session):
         if timeout is None:
             timeout = self.timeout
 
-        resp = self._session.request(
-            request_data.method, 
-            request_data.url, 
-            headers=request_data.headers, 
-            json=request_data.json_data, 
-            timeout=timeout
-            )
-        
+        # requests raises its own Timeout (an OSError), which is NOT a builtin
+        # TimeoutError -- translate it so the base session's retry loop sees it.
+        try:
+            resp = self._session.request(
+                request_data.method,
+                request_data.url,
+                headers=request_data.headers,
+                json=request_data.json_data,
+                timeout=timeout
+                )
+        except ReqTimeout as e:
+            raise TimeoutError(str(e)) from e
+
         return resp.status_code, resp.text
 
     def start(self) -> None:

@@ -15,8 +15,9 @@ class AiohttpSession(AsyncIoSession):
         self, 
         *args, 
         limit: int = 100, 
-        limit_per_host: int = 30, 
-        ttl_dns_cache: Number = 3600, 
+        limit_per_host: int = 0, 
+        ttl_dns_cache: Optional[Number] = 3600, 
+        loop: Optional[asyncio.AbstractEventLoop] = None, 
         **kw, 
         ) -> None:
         
@@ -28,6 +29,7 @@ class AiohttpSession(AsyncIoSession):
             "limit": limit, 
             "limit_per_host": limit_per_host, 
             "ttl_dns_cache": ttl_dns_cache, 
+            "loop": loop, 
         }
 
         
@@ -38,15 +40,23 @@ class AiohttpSession(AsyncIoSession):
         if timeout is not None:
             timeout = ClientTimeout(total=float(timeout))
 
-        async with self._session.request(
-            request_data.method, 
-            request_data.url, 
-            headers=request_data.headers, 
-            json=request_data.json_data, 
-            timeout=timeout
-            ) as resp:
+        # On Python < 3.11 asyncio.TimeoutError is its own class rather than an
+        # alias of the builtin, so aiohttp's timeouts would slip past the base
+        # session's `except TimeoutError` -- translate them.
+        try:
+            async with self._session.request(
+                request_data.method,
+                request_data.url,
+                headers=request_data.headers,
+                json=request_data.json_data,
+                timeout=timeout
+                ) as resp:
 
-            return resp.status, await resp.text()
+                return resp.status, await resp.text()
+        except asyncio.TimeoutError as e:
+            if isinstance(e, TimeoutError):
+                raise
+            raise TimeoutError(str(e)) from e
             
     async def start(self):
         if self._session is None or self._session.closed:
