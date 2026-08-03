@@ -1,17 +1,12 @@
-from typing import Tuple, Optional, TYPE_CHECKING
-
-from pydantic import ValidationError
-from http import HTTPStatus
+from typing import Optional, TYPE_CHECKING
 
 from ...typings import Number
-from ...models import RequestData
-from ...errors import ApiError, TooManyRequests, InvalidResponseError, ResponseValidationError
+from ...errors import TooManyRequests
 from ...methods import ApiMethod, Response
 from ...types import ApiType
+from ...base_session import BaseSession
 
-import abc
 import time
-import json
 import logging
 
 if TYPE_CHECKING:
@@ -22,72 +17,19 @@ log = logging.getLogger(__name__)
 
 
 
-class Session(abc.ABC):
-    RETRIES = 1
-    TIMEOUT = 60
-    SLEEP_THRESHOLD = 60
-
-    def __init__(
-        self, 
-        client: "Client", 
-
-        retries: int = RETRIES, 
-        timeout: Number = TIMEOUT, 
-        sleep_threshold: Number = SLEEP_THRESHOLD
-        ) -> None:
-
-        self.client = client
-
-        self.retries = retries
-        self.timeout = timeout 
-        self.sleep_threshold = sleep_threshold 
-
-    def check_response(
-        self, 
-        method: ApiMethod[ApiType], 
-        status_code: int, 
-        content: str
-        ) -> Response[ApiType]:
-
-        method_name = method.name
-
-        try:
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            raise InvalidResponseError(e, method_name) from e
-
-        try:
-            response_type = Response[method.__returning__]
-            response = response_type.model_validate(data)
-        except ValidationError as e:
-            raise ResponseValidationError(e, method_name) from e
-
-        if HTTPStatus.OK <= status_code <= HTTPStatus.IM_USED and response.ok:
-            log.debug(
-                "Request succeeded | method=%s status=%d",
-                method_name, status_code
-            )
-            return response
-
-        ApiError.raise_it(status_code, response, method_name)
+class Session(BaseSession["Client"]):
+    check_response = BaseSession._parse_and_validate_response
 
     def __call__(
-        self, 
-        api_method: ApiMethod[ApiType], 
-        retries: Optional[int] = None, 
-        timeout: Optional[Number] = None, 
-        sleep_threshold: Optional[Number] = None, 
-        ) -> ApiType: 
-        
-        if retries is None:
-            retries = self.retries
-        
-        if sleep_threshold is None:
-            sleep_threshold = self.sleep_threshold
-        
-        req_data = self.client.config.build_request(
-            self.client.api_key, api_method
+        self,
+        api_method: ApiMethod[ApiType],
+        retries: Optional[int] = None,
+        timeout: Optional[Number] = None,
+        sleep_threshold: Optional[Number] = None,
+        ) -> ApiType:
 
+        retries, sleep_threshold, req_data = self._resolve_call_params(
+            api_method, retries, sleep_threshold
         )
 
         for i in range(1, retries + 1):
@@ -105,30 +47,22 @@ class Session(abc.ABC):
             try:
                 return self.check_response(api_method, status_code, content).result
             except TooManyRequests as e:
-                if e.value > sleep_threshold:
+                retry_after = e.value
+
+                if retry_after is None or retry_after > sleep_threshold:
                     raise
 
                 log.warning(
                     "Rate limited, sleeping | request=%s retry_after=%s attempt=%d/%d",
-                    req_data, e.value, i, retries
+                    req_data, retry_after, i, retries
                 )
-                time.sleep(e.value)
+                time.sleep(retry_after)
         
         
         raise TimeoutError(f"Failed after {retries} retries for {req_data}")
 
-    @abc.abstractmethod
-    def make_request(
-        self, 
-        request_data: RequestData, 
-        *, 
-        timeout: Optional[Number] = None
-        ) -> Tuple[int, str]:
-        raise NotImplementedError
-
-    
-    def start(self) -> None: 
+    def start(self) -> None:
         pass
-    
-    def stop(self) -> None: 
+
+    def stop(self) -> None:
         pass
