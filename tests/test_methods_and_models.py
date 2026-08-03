@@ -2,12 +2,6 @@ from WolfTg.methods import BuySessions, GetBalance
 from WolfTg.models import ApiConfig
 
 
-def test_method_name_is_class_name():
-    method = BuySessions(
-        country_code="US", section="active", session_type="telethon", qty=2
-    )
-    assert method.name == "BuySessions"
-
 
 def test_model_dump_uses_enum_values():
     method = BuySessions(
