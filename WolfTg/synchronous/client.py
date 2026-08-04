@@ -11,7 +11,7 @@ from ..utils import (
 from ..methods import ApiMethod
 from ..types import ApiType
 from ..models import ApiConfig, api_config
-from ..base_client import BaseClient, ErrorHandler
+from ..base_client import BaseClient, ErrorHandler, ErrorHandlersArg
 
 from .session import Session, RequestsSession
 
@@ -47,6 +47,7 @@ class Client(BaseClient[Session]):
         retries: Optional[int] = None,
         timeout: Optional[Number] = None,
         sleep_threshold: Optional[Number] = None,
+        error_handlers: Optional[ErrorHandlersArg] = None,
         ) -> ApiType:
 
         self._apply_context(method)
@@ -59,7 +60,9 @@ class Client(BaseClient[Session]):
                 sleep_threshold=sleep_threshold
             )
         except Exception as e:
-            handler = self.get_error_handler(e)
+            handler = self.get_error_handler(
+                e, method, extra=self._normalize_error_handlers(error_handlers)
+            )
 
             if handler is not None:
                 if iscoroutinefunction_wrapped(handler):

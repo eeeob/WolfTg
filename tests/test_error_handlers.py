@@ -114,6 +114,72 @@ def test_no_handlers_registered_is_a_clean_passthrough(sync_factory):
         client(GetBalance())
 
 
+# --- method-scoped handlers ------------------------------------------------
+
+def test_method_scoped_handler_fires_for_its_method(sync_factory):
+    fired = []
+    client = _sync_client(sync_factory)
+    client.add_error_handler(
+        BadRequest, lambda *a: fired.append(1), methods=[GetBalance]
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance())
+
+    assert fired == [1]
+
+
+def test_method_scoped_handler_does_not_fire_for_other_methods(sync_factory):
+    from WolfTg.methods import AvailableCountries
+
+    fired = []
+    client = _sync_client(sync_factory)
+    client.add_error_handler(
+        BadRequest, lambda *a: fired.append(1), methods=[AvailableCountries]
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance())
+
+    assert fired == []
+
+
+def test_method_scoped_handler_wins_over_method_less_handler(sync_factory):
+    fired = []
+    client = Client(
+        api_key="K",
+        session_factory=sync_factory(responses=[(400, ERR_BODY)]),
+        error_handlers={BadRequest: lambda *a: fired.append("generic")},
+    )
+    client.add_error_handler(
+        BadRequest, lambda *a: fired.append("scoped"), methods=[GetBalance]
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance())
+
+    assert fired == ["scoped"]
+
+
+def test_method_less_handler_still_catches_a_different_method(sync_factory):
+    from WolfTg.methods import AvailableCountries
+
+    fired = []
+    client = Client(
+        api_key="K",
+        session_factory=sync_factory(responses=[(400, ERR_BODY)]),
+        error_handlers={BadRequest: lambda *a: fired.append("generic")},
+    )
+    client.add_error_handler(
+        BadRequest, lambda *a: fired.append("scoped"), methods=[AvailableCountries]
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance())
+
+    assert fired == ["generic"]
+
+
 # --- isolation -----------------------------------------------------------
 
 def test_handler_exception_does_not_mask_the_original_error(sync_factory):
@@ -271,3 +337,79 @@ def test_runner_is_not_created_without_the_flag(sync_factory):
     assert client._awaitable_runner is None
 
     client.stop()
+
+
+# --- per-call error_handlers ------------------------------------------------
+
+def test_per_call_handler_fires_alongside_client_handler(sync_factory):
+    fired = []
+    client = _sync_client(
+        sync_factory, error_handlers={BadRequest: lambda *a: fired.append("client")}
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance(), error_handlers={BadRequest: lambda *a: fired.append("call")})
+
+    assert fired == ["call"]
+
+
+def test_per_call_handler_works_with_no_client_handlers_registered(sync_factory):
+    fired = []
+    client = _sync_client(sync_factory)
+
+    with pytest.raises(BadRequest):
+        client(GetBalance(), error_handlers={BadRequest: lambda *a: fired.append(1)})
+
+    assert fired == [1]
+
+
+def test_per_call_handler_does_not_leak_into_later_calls(sync_factory):
+    fired = []
+    client = Client(
+        api_key="K", session_factory=sync_factory(responses=[(400, ERR_BODY), (400, ERR_BODY)])
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance(), error_handlers={BadRequest: lambda *a: fired.append(1)})
+
+    with pytest.raises(BadRequest):
+        client(GetBalance())
+
+    assert fired == [1]
+
+
+def test_per_call_handler_falls_back_to_client_handler_for_other_types(sync_factory):
+    fired = []
+    client = _sync_client(
+        sync_factory, error_handlers={ApiError: lambda *a: fired.append("client")}
+    )
+
+    with pytest.raises(BadRequest):
+        client(GetBalance(), error_handlers={TooManyRequests: lambda *a: fired.append("call")})
+
+    assert fired == ["client"]
+
+
+def test_per_call_handler_can_be_method_scoped(sync_factory):
+    from WolfTg.methods import AvailableCountries
+
+    fired = []
+    client = _sync_client(sync_factory)
+
+    with pytest.raises(BadRequest):
+        client(
+            GetBalance(),
+            error_handlers={BadRequest: {AvailableCountries: lambda *a: fired.append("scoped")}},
+        )
+
+    assert fired == []
+
+
+async def test_per_call_handler_works_on_async_client(async_factory):
+    fired = []
+    client = _async_client(async_factory)
+
+    with pytest.raises(BadRequest):
+        await client(GetBalance(), error_handlers={BadRequest: lambda *a: fired.append(1)})
+
+    assert fired == [1]
