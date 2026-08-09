@@ -12,7 +12,7 @@ class SellAccount(ApiMethod[SellAccountResult]):
     __request_method__ = "POST"
 
     phone_number: PhoneNumber
-    section: AccountSection
+    section: Optional[AccountSection] = None
 
 class SetCodeAccount(ApiMethod[SetCodeAccountResult]):
     __returning__ = SetCodeAccountResult
