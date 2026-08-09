@@ -10,7 +10,7 @@ import pytest
 
 from WolfTg import Client, AsyncClient
 from WolfTg.methods import GetBalance
-from WolfTg.errors import ApiError, BadRequest, TooManyRequests, InvalidSection
+from WolfTg.errors import ApiError, BadRequest, InvalidUserId, TooManyRequests
 
 from .conftest import ERR_BODY
 
@@ -43,19 +43,21 @@ def test_handler_receives_error_client_and_method(sync_factory):
 
 def test_most_specific_handler_wins_over_base_class(sync_factory):
     fired = []
-    client = _sync_client(
-        sync_factory,
+    body = '{"ok": false, "error_id": "INVALID_USER_ID", "message": "bad", "error_value": "x"}'
+    client = Client(
+        api_key="K",
+        session_factory=sync_factory(responses=[(400, body)]),
         error_handlers={
             ApiError: lambda *a: fired.append("ApiError"),
             BadRequest: lambda *a: fired.append("BadRequest"),
-            InvalidSection: lambda *a: fired.append("InvalidSection"),
+            InvalidUserId: lambda *a: fired.append("InvalidUserId"),
         },
     )
 
-    with pytest.raises(BadRequest):
+    with pytest.raises(InvalidUserId):
         client(GetBalance())
 
-    assert fired == ["InvalidSection"]
+    assert fired == ["InvalidUserId"]
 
 
 def test_base_class_handler_catches_subclass(sync_factory):
