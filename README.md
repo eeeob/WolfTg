@@ -24,6 +24,12 @@ WolfTg provides a simple and modern interface for interacting with the WolfTg AP
 pip install WolfTg
 ```
 
+For the latest updates directly from GitHub (not tied to a released version):
+
+```bash
+pip install git+https://github.com/eeeob/WolfTg.git --force-reinstall
+```
+
 ## Quick Start
 
 ### Synchronous Client
