@@ -51,12 +51,6 @@ class InvalidUserId(BadRequest):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class InvalidSection(BadRequest):
-    """Section is invalid"""
-    ID = "INVALID_SECTION"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 
 
 __all__ = (
@@ -68,6 +62,5 @@ __all__ = (
     "ChangedPassword", 
     "InvalidContentType", 
     "InvalidUserId", 
-    "InvalidSection", 
 )
 

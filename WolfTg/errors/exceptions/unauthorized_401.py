@@ -15,12 +15,6 @@ class SessionPasswordNeeded(Unauthorized):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class UserApiKeyInvalid(Unauthorized):
-    """Api key is invalid"""
-    ID = "USER_API_KEY_INVALID"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 class UserApiKeyNotFound(Unauthorized):
     """Api key not found"""
     ID = "USER_API_KEY_NOT_FOUND"
@@ -50,7 +44,6 @@ class OrderAccessDenied(Unauthorized):
 __all__ = (
     "Unauthorized", 
     "SessionPasswordNeeded", 
-    "UserApiKeyInvalid", 
     "UserApiKeyNotFound", 
     "UserApiKeyRevoked", 
     "MissingAuthenticationHeaders", 

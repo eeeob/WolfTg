@@ -15,17 +15,10 @@ class TooManyRequests(Flood):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class MaxGetCodeAttemptsExceeded(Flood):
-    """Maximum number of OTP retrieval attempts has been exceeded"""
-    ID = "MAX_GET_CODE_ATTEMPTS_EXCEEDED"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 
 
 __all__ = (
     "Flood", 
     "TooManyRequests", 
-    "MaxGetCodeAttemptsExceeded", 
 )
 

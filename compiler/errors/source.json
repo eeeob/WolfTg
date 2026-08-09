@@ -1,69 +1,66 @@
 {
-  "400": {
-    "_": "BAD_REQUEST",
-    "INVALID_VERIFICATION_CODE": "The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds",
-    "EXPIRED_VERIFICATION_CODE": "The verification code is expired. The operation was cancelled.",
-    "INVALID_PHONE_NUMBER": "The phone_number is invalid. It may be prohibited, restricted, etc. The operation was cancelled.",
-    "INVALID_PASSWORD": "The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
-    "CHANGED_PASSWORD": "The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
-    "INVALID_CONTENT_TYPE": "Content-Type must be application/json",
-    "INVALID_USER_ID": "User id {value} is invalid",
-    "INVALID_SECTION": "Section is invalid"
-  },
-  "401": {
-    "_": "UNAUTHORIZED",
-    "SESSION_PASSWORD_NEEDED": "Two-step verification password is required to complete authentication for {value[account]}. Password hint: {value[hint]}. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds",
-    "USER_API_KEY_INVALID": "Api key is invalid",
-    "USER_API_KEY_NOT_FOUND": "Api key not found",
-    "USER_API_KEY_REVOKED": "Api key has been revoked",
-    "MISSING_AUTHENTICATION_HEADERS": "Authentication headers are missing",
-    "ORDER_ACCESS_DENIED": "You are not authorized to access this order"
-  },
-  "403": {
-    "_": "FORBIDDEN",
-    "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account",
-    "INVALID_BUYER_ACCOUNT_OWNER": "You are not the owner of this buy account",
-    "INVALID_REQUESTER": "You are not the valid Requester",
-    "NUMBER_BLOCKED_FROM_SELL": "This phone number is blocked from selling. Reason: {value}",
-    "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
-    "USER_BANNED_FROM_API": "You are banned from using the API. Ban duration: {value}s",
-    "USER_BANNED_FROM_SELLING": "You are banned from selling accounts. Ban duration: {value}s",
-    "USER_BANNED_FROM_BUYING": "You are banned from buying accounts. Ban duration: {value}s"
-  },
-  "404": {
-    "_": "NOT_FOUND",
-    "PHONE_NUMBER_UNOCCUPIED": "The phone number is not registered on Telegram",
-    "NOT_FOUND_OTP_CODE": "OTP code is not available for this session at the moment",
-    "ORDER_NOT_FOUND": "Order {value} not found"
-  },
-  "405": {
-    "_": "METHOD_NOT_ALLOWED"
-  },
-  "409": {
-    "_": "CONFLICT",
-    "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation",
-    "EXPIRED_STAT": "This operation cannot be performed because the stat has expired",
-    "ACCOUNT_FOR_SELL_SECTION_CLOSED": "Selling is not allowed for {context[country]} country {context[section]} account section at the moment",
-    "ACCOUNT_FOR_BUY_SECTION_CLOSED": "Buying is not allowed for {context[country]} country {context[section]} account section at the moment",
-    "SESSION_ALREADY_EXISTS": "A session already exists for this phone number",
-    "SELL_ACCOUNT_STAT_ALREADY_EXISTS": "A sell process already exists for this account",
-    "INSUFFICIENT_BALANCE": "You are does not have enough balance for this operation",
-    "NO_ACCOUNTS_AVAILABLE_FOR_COUNTRY": "No accounts available for purchase in this country",
-    "ACCOUNT_PURCHASE_ATTEMPTS_EXHAUSTED": "All purchase attempts have been exhausted without acquiring an account",
-    "ACCOUNT_DEAD_DURING_GET_CODE": "Account became dead during code retrieval process"
-  },
-  "420": {
-    "_": "FLOOD",
-    "TOO_MANY_REQUESTS": "Too many requests. Please try again after {value}s.",
-    "MAX_GET_CODE_ATTEMPTS_EXCEEDED": "Maximum number of OTP retrieval attempts has been exceeded"
-  },
-  "500": {
-    "_": "INTERNAL_SERVER_ERROR",
-    "TELEGRAM_ERROR": "Unknow Telegram service error occurred. Error: {context}",
-    "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
-  },
-  "503": {
-    "_": "SERVICE_UNAVAILABLE",
-    "API_UNAVAILABLE": "The API is currently unavailable"
-  }
+    "400": {
+        "_": "BAD_REQUEST",
+        "INVALID_VERIFICATION_CODE": "The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds",
+        "EXPIRED_VERIFICATION_CODE": "The verification code is expired. The operation was cancelled.",
+        "INVALID_PHONE_NUMBER": "The phone_number is invalid. It may be prohibited, restricted, etc. The operation was cancelled.",
+        "INVALID_PASSWORD": "The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
+        "CHANGED_PASSWORD": "The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
+        "INVALID_CONTENT_TYPE": "Content-Type must be application/json",
+        "INVALID_USER_ID": "User id {value} is invalid"
+    },
+    "401": {
+        "_": "UNAUTHORIZED",
+        "SESSION_PASSWORD_NEEDED": "Two-step verification password is required to complete authentication for {value[account]}. Password hint: {value[hint]}. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds",
+        "USER_API_KEY_NOT_FOUND": "Api key not found",
+        "USER_API_KEY_REVOKED": "Api key has been revoked",
+        "MISSING_AUTHENTICATION_HEADERS": "Authentication headers are missing",
+        "ORDER_ACCESS_DENIED": "You are not authorized to access this order"
+    },
+    "403": {
+        "_": "FORBIDDEN",
+        "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account",
+        "INVALID_BUYER_ACCOUNT_OWNER": "You are not the owner of this buy account",
+        "INVALID_REQUESTER": "You are not the valid Requester",
+        "NUMBER_BLOCKED_FROM_SELL": "This phone number is blocked from selling. Reason: {value}",
+        "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
+        "USER_BANNED_FROM_API": "You are banned from using the API. Ban duration: {value}s",
+        "USER_BANNED_FROM_SELLING": "You are banned from selling accounts. Ban duration: {value}s",
+        "USER_BANNED_FROM_BUYING": "You are banned from buying accounts. Ban duration: {value}s"
+    },
+    "404": {
+        "_": "NOT_FOUND",
+        "PHONE_NUMBER_UNOCCUPIED": "The phone number is not registered on Telegram",
+        "NOT_FOUND_OTP_CODE": "OTP code is not available for this session at the moment",
+        "ORDER_NOT_FOUND": "Order {value} not found"
+    },
+    "405": {
+        "_": "METHOD_NOT_ALLOWED"
+    },
+    "409": {
+        "_": "CONFLICT",
+        "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation",
+        "EXPIRED_STAT": "This operation cannot be performed because the stat has expired",
+        "ACCOUNT_FOR_SELL_SECTION_CLOSED": "Selling is not allowed for {context[country]} country {context[section]} account section at the moment",
+        "ACCOUNT_FOR_BUY_SECTION_CLOSED": "Buying is not allowed for {context[country]} country {context[section]} account section at the moment",
+        "SESSION_ALREADY_EXISTS": "A session already exists for this phone number",
+        "SELL_ACCOUNT_STAT_ALREADY_EXISTS": "A sell process already exists for this account",
+        "INSUFFICIENT_BALANCE": "You are does not have enough balance for this operation",
+        "NO_ACCOUNTS_AVAILABLE_FOR_COUNTRY": "No accounts available for purchase in this country",
+        "ACCOUNT_PURCHASE_ATTEMPTS_EXHAUSTED": "All purchase attempts have been exhausted without acquiring an account",
+        "ACCOUNT_DEAD_DURING_GET_CODE": "Account became dead during code retrieval process"
+    },
+    "420": {
+        "_": "FLOOD",
+        "TOO_MANY_REQUESTS": "Too many requests. Please try again after {value}s."
+    },
+    "500": {
+        "_": "INTERNAL_SERVER_ERROR",
+        "TELEGRAM_ERROR": "Unknow Telegram service error occurred. Error: {context}",
+        "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
+    },
+    "503": {
+        "_": "SERVICE_UNAVAILABLE",
+        "API_UNAVAILABLE": "The API is currently unavailable"
+    }
 }
