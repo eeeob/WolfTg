@@ -1,1003 +1,1083 @@
 {
-    "BuyAccount": {
-        "path": "/api/BuyAccount",
-        "methods": [
-            "GET"
-        ],
-        "description": "Buy a single Telegram account from the given country and quality tier.\n\nReserves an available account, charges the buyer's balance (after applying any\neligible discount) and returns the reserved phone number. The login code is not\ndelivered here — the buyer retrieves it separately via GetCodeAccount.\n\nOn any failure after reservation, the reservation is released and the charge refunded.",
-        "request": {
-            "properties": {
-                "country_code": {
-                    "description": "ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase.",
-                    "examples": [
-                        "ye",
-                        "sa"
-                    ],
-                    "type": "string"
-                },
-                "section": {
-                    "enum": [
-                        "active",
-                        "spam",
-                        "frozen"
-                    ],
-                    "type": "string",
-                    "description": "Quality tier of the account to buy. Determines pricing and availability.",
-                    "examples": [
-                        "active"
-                    ]
-                }
-            },
-            "required": [
-                "country_code",
-                "section"
+    "$defs": {
+        "AccountOperation": {
+            "enum": [
+                "sell",
+                "buy"
             ],
-            "type": "object"
+            "type": "string",
+            "title": "AccountOperation"
         },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "phone_number": {
-                            "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                            "examples": [
-                                "+967771234567"
-                            ],
-                            "type": "string"
-                        },
-                        "price": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                }
-                            ],
-                            "description": "Amount deducted from the buyer's balance for this account.",
-                            "examples": [
-                                1.5
-                            ]
-                        }
-                    },
-                    "required": [
-                        "phone_number",
-                        "price"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
+        "AccountSection": {
+            "enum": [
+                "active",
+                "spam",
+                "frozen"
             ],
-            "type": "object"
+            "type": "string",
+            "title": "AccountSection"
         },
-        "errors": {
-            "403": {
-                "USER_BANNED_FROM_BUYING": "You are banned from buying accounts. Ban duration: {value}s"
-            },
-            "409": {
-                "ACCOUNT_FOR_BUY_SECTION_CLOSED": "Buying is not allowed for {context[country]} country {context[section]} account section at the moment",
-                "ACCOUNT_PURCHASE_ATTEMPTS_EXHAUSTED": "All purchase attempts have been exhausted without acquiring an account",
-                "INSUFFICIENT_BALANCE": "You are does not have enough balance for this operation",
-                "NO_ACCOUNTS_AVAILABLE_FOR_COUNTRY": "No accounts available for purchase in this country"
-            }
+        "BalanceType": {
+            "enum": [
+                "sell",
+                "buy",
+                "referral"
+            ],
+            "type": "string",
+            "title": "BalanceType"
+        },
+        "BuySessionType": {
+            "enum": [
+                "pyrogram",
+                "pyrogram_string",
+                "kurigram",
+                "kurigram_string",
+                "telethon",
+                "telethon_string",
+                "tdata"
+            ],
+            "type": "string",
+            "title": "BuySessionType"
+        },
+        "OrderStatus": {
+            "enum": [
+                "pending",
+                "processing",
+                "delivering",
+                "delivered",
+                "cancelling",
+                "cancelled"
+            ],
+            "type": "string",
+            "title": "OrderStatus"
+        },
+        "SendCodeType": {
+            "enum": [
+                "app",
+                "email"
+            ],
+            "type": "string",
+            "title": "SendCodeType"
         }
     },
-    "BuySessions": {
-        "path": "/api/BuySessions",
-        "methods": [
-            "GET"
-        ],
-        "description": "Place a bulk order for ready-made Telegram session files.\n\nReserves up to `qty` accounts from the given country and quality tier, charges the\nbuyer's balance and queues the order for background processing. Returns immediately\nwith the order record; delivery progress is polled via GetBuySessionsOrder.\n\nWhen `force_full` is set, the order is rejected unless the full quantity is available.\nOn any failure before the order is queued, reservations are released and the charge\nrefunded.",
-        "request": {
-            "properties": {
-                "country_code": {
-                    "description": "ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase.",
-                    "examples": [
-                        "ye",
-                        "sa"
-                    ],
-                    "type": "string"
-                },
-                "section": {
-                    "enum": [
-                        "active",
-                        "spam",
-                        "frozen"
-                    ],
-                    "type": "string",
-                    "description": "Quality tier of the sessions to buy. Determines pricing and availability.",
-                    "examples": [
-                        "active"
-                    ]
-                },
-                "session_type": {
-                    "enum": [
-                        "pyrogram",
-                        "pyrogram_string",
-                        "kurigram",
-                        "kurigram_string",
-                        "telethon",
-                        "telethon_string",
-                        "tdata"
-                    ],
-                    "type": "string",
-                    "description": "Session file format to deliver. The '*_string' variants return a session string instead of a file.",
-                    "examples": [
-                        "pyrogram",
-                        "telethon_string"
-                    ]
-                },
-                "qty": {
-                    "description": "Number of sessions to order. Must be greater than zero.",
-                    "examples": [
-                        5
-                    ],
-                    "exclusiveMinimum": 0,
-                    "type": "integer"
-                },
-                "force_full": {
-                    "default": false,
-                    "description": "When true, the order fails unless the full requested quantity can be delivered; otherwise a partial delivery is accepted.",
-                    "type": "boolean"
-                },
-                "include_json": {
-                    "default": false,
-                    "description": "When true, a JSON metadata file is delivered alongside each session.",
-                    "type": "boolean"
-                }
-            },
-            "required": [
-                "country_code",
-                "section",
-                "session_type",
-                "qty"
+    "endpoints": {
+        "BuyAccount": {
+            "path": "/api/BuyAccount",
+            "methods": [
+                "GET"
             ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "id": {
-                            "description": "Order identifier, used to poll delivery progress via GetBuySessionsOrder.",
-                            "examples": [
-                                "507f1f77bcf86cd799439011"
-                            ],
-                            "type": "string"
-                        },
-                        "country_code": {
-                            "description": "ISO 3166-1 alpha-2 country code the sessions were ordered for, uppercased.",
-                            "examples": [
-                                "YE"
-                            ],
-                            "type": "string"
-                        },
-                        "section": {
-                            "enum": [
-                                "active",
-                                "spam",
-                                "frozen"
-                            ],
-                            "type": "string",
-                            "description": "Quality tier the sessions were ordered for.",
-                            "examples": [
-                                "active"
-                            ]
-                        },
-                        "session_type": {
-                            "enum": [
-                                "pyrogram",
-                                "pyrogram_string",
-                                "kurigram",
-                                "kurigram_string",
-                                "telethon",
-                                "telethon_string",
-                                "tdata"
-                            ],
-                            "type": "string",
-                            "description": "Session file format being delivered.",
-                            "examples": [
-                                "pyrogram"
-                            ]
-                        },
-                        "qty": {
-                            "description": "Number of sessions requested in this order.",
-                            "examples": [
-                                5
-                            ],
-                            "type": "integer"
-                        },
-                        "force_full": {
-                            "description": "Whether the order requires the full quantity to be delivered or fails.",
-                            "type": "boolean"
-                        },
-                        "include_json": {
-                            "description": "Whether a JSON metadata file is delivered alongside each session.",
-                            "type": "boolean"
-                        },
-                        "status": {
-                            "enum": [
-                                "pending",
-                                "processing",
-                                "delivering",
-                                "delivered",
-                                "cancelling",
-                                "cancelled"
-                            ],
-                            "type": "string",
-                            "default": "pending",
-                            "description": "Current lifecycle stage of the order.",
-                            "examples": [
-                                "pending"
-                            ]
-                        },
-                        "ready_count": {
-                            "default": 0,
-                            "description": "Number of sessions prepared and ready for delivery so far.",
-                            "examples": [
-                                2
-                            ],
-                            "type": "integer"
-                        }
+            "description": "Buy a single Telegram account from the given country and quality tier.\n\nReserves an available account, charges the buyer's balance (after applying any\neligible discount) and returns the reserved phone number. The login code is not\ndelivered here — the buyer retrieves it separately via GetCodeAccount.\n\nOn any failure after reservation, the reservation is released and the charge refunded.",
+            "request": {
+                "properties": {
+                    "country_code": {
+                        "description": "ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase.",
+                        "examples": [
+                            "ye",
+                            "sa"
+                        ],
+                        "type": "string"
                     },
-                    "required": [
-                        "id",
-                        "country_code",
-                        "section",
-                        "session_type",
-                        "qty",
-                        "force_full",
-                        "include_json"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "403": {
-                "USER_BANNED_FROM_BUYING": "You are banned from buying accounts. Ban duration: {value}s"
-            },
-            "409": {
-                "ACCOUNT_FOR_BUY_SECTION_CLOSED": "Buying is not allowed for {context[country]} country {context[section]} account section at the moment",
-                "INSUFFICIENT_BALANCE": "You are does not have enough balance for this operation",
-                "NO_ACCOUNTS_AVAILABLE_FOR_COUNTRY": "No accounts available for purchase in this country"
-            }
-        }
-    },
-    "GetBuySessionsOrder": {
-        "path": "/api/GetBuySessionsOrder",
-        "methods": [
-            "GET"
-        ],
-        "description": "Poll the progress of a previously placed sessions order.\n\nReturns the same order record as BuySessions, with `status` and `ready_count`\nreflecting current delivery progress. Only the buyer who placed the order may read it.",
-        "request": {
-            "properties": {
-                "order_id": {
-                    "description": "24-character hexadecimal MongoDB ObjectId identifying a buy-sessions order.",
-                    "examples": [
-                        "507f1f77bcf86cd799439011"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "order_id"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
+                    "section": {
+                        "$ref": "#/$defs/AccountSection",
+                        "description": "Quality tier of the account to buy. Determines pricing and availability.",
+                        "examples": [
+                            "active"
+                        ]
+                    }
                 },
-                "result": {
-                    "properties": {
-                        "id": {
-                            "description": "Order identifier, used to poll delivery progress via GetBuySessionsOrder.",
-                            "examples": [
-                                "507f1f77bcf86cd799439011"
-                            ],
-                            "type": "string"
-                        },
-                        "country_code": {
-                            "description": "ISO 3166-1 alpha-2 country code the sessions were ordered for, uppercased.",
-                            "examples": [
-                                "YE"
-                            ],
-                            "type": "string"
-                        },
-                        "section": {
-                            "enum": [
-                                "active",
-                                "spam",
-                                "frozen"
-                            ],
-                            "type": "string",
-                            "description": "Quality tier the sessions were ordered for.",
-                            "examples": [
-                                "active"
-                            ]
-                        },
-                        "session_type": {
-                            "enum": [
-                                "pyrogram",
-                                "pyrogram_string",
-                                "kurigram",
-                                "kurigram_string",
-                                "telethon",
-                                "telethon_string",
-                                "tdata"
-                            ],
-                            "type": "string",
-                            "description": "Session file format being delivered.",
-                            "examples": [
-                                "pyrogram"
-                            ]
-                        },
-                        "qty": {
-                            "description": "Number of sessions requested in this order.",
-                            "examples": [
-                                5
-                            ],
-                            "type": "integer"
-                        },
-                        "force_full": {
-                            "description": "Whether the order requires the full quantity to be delivered or fails.",
-                            "type": "boolean"
-                        },
-                        "include_json": {
-                            "description": "Whether a JSON metadata file is delivered alongside each session.",
-                            "type": "boolean"
-                        },
-                        "status": {
-                            "enum": [
-                                "pending",
-                                "processing",
-                                "delivering",
-                                "delivered",
-                                "cancelling",
-                                "cancelled"
-                            ],
-                            "type": "string",
-                            "default": "pending",
-                            "description": "Current lifecycle stage of the order.",
-                            "examples": [
-                                "pending"
-                            ]
-                        },
-                        "ready_count": {
-                            "default": 0,
-                            "description": "Number of sessions prepared and ready for delivery so far.",
-                            "examples": [
-                                2
-                            ],
-                            "type": "integer"
-                        }
+                "required": [
+                    "country_code",
+                    "section"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
                     },
-                    "required": [
-                        "id",
-                        "country_code",
-                        "section",
-                        "session_type",
-                        "qty",
-                        "force_full",
-                        "include_json"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "401": {
-                "ORDER_ACCESS_DENIED": "You are not authorized to access this order"
-            },
-            "404": {
-                "ORDER_NOT_FOUND": "Order {value} not found"
-            }
-        }
-    },
-    "GetCodeAccount": {
-        "path": "/api/GetCodeAccount",
-        "methods": [
-            "GET"
-        ],
-        "description": "Retrieve the Telegram login code and two-step password for a purchased account.\n\nOnly the buyer who reserved the account may call this, and only while it is still\nreserved. Each call consumes one attempt. On success the account session is logged\nout and handed over to the buyer.\n\nIf the account is found dead during retrieval the purchase is refunded — unless the\nattempt budget is already exhausted, in which case no refund is issued.",
-        "request": {
-            "properties": {
-                "phone_number": {
-                    "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                    "examples": [
-                        "+967771234567"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "phone_number"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
+                    "result": {
+                        "properties": {
+                            "phone_number": {
+                                "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                                "examples": [
+                                    "+967771234567"
+                                ],
+                                "type": "string"
+                            },
+                            "price": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ],
+                                "description": "Amount deducted from the buyer's balance for this account.",
+                                "examples": [
+                                    1.5
+                                ]
+                            }
+                        },
+                        "required": [
+                            "phone_number",
+                            "price"
+                        ],
+                        "type": "object"
+                    }
                 },
-                "result": {
-                    "properties": {
-                        "phone_number": {
-                            "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                            "examples": [
-                                "+967771234567"
-                            ],
-                            "type": "string"
-                        },
-                        "code": {
-                            "description": "Telegram login code retrieved from the purchased account.",
-                            "examples": [
-                                12345
-                            ],
-                            "type": "integer"
-                        },
-                        "password": {
-                            "description": "Two-step verification password set on the purchased account.",
-                            "examples": [
-                                "my-2fa-password"
-                            ],
-                            "type": "string"
-                        }
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "403": {
+                    "USER_BANNED_FROM_BUYING": "You are banned from buying accounts. Ban duration: {value}s"
+                },
+                "409": {
+                    "ACCOUNT_FOR_BUY_SECTION_CLOSED": "Buying is not allowed for {context[country]} country {context[section]} account section at the moment",
+                    "ACCOUNT_PURCHASE_ATTEMPTS_EXHAUSTED": "All purchase attempts have been exhausted without acquiring an account",
+                    "INSUFFICIENT_BALANCE": "You are does not have enough balance for this operation",
+                    "NO_ACCOUNTS_AVAILABLE_FOR_COUNTRY": "No accounts available for purchase in this country"
+                }
+            }
+        },
+        "BuySessions": {
+            "path": "/api/BuySessions",
+            "methods": [
+                "GET"
+            ],
+            "description": "Place a bulk order for ready-made Telegram session files.\n\nReserves up to `qty` accounts from the given country and quality tier, charges the\nbuyer's balance and queues the order for background processing. Returns immediately\nwith the order record; delivery progress is polled via GetBuySessionsOrder.\n\nWhen `force_full` is set, the order is rejected unless the full quantity is available.\nOn any failure before the order is queued, reservations are released and the charge\nrefunded.",
+            "request": {
+                "properties": {
+                    "country_code": {
+                        "description": "ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase.",
+                        "examples": [
+                            "ye",
+                            "sa"
+                        ],
+                        "type": "string"
                     },
-                    "required": [
-                        "phone_number",
-                        "code",
-                        "password"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "403": {
-                "INVALID_BUYER_ACCOUNT_OWNER": "You are not the owner of this buy account"
-            },
-            "404": {
-                "NOT_FOUND_OTP_CODE": "OTP code is not available for this session at the moment"
-            },
-            "409": {
-                "ACCOUNT_DEAD_DURING_GET_CODE": "Account became dead during code retrieval process",
-                "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
-            },
-            "500": {
-                "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
-            }
-        }
-    },
-    "GetSellAccountStat": {
-        "path": "/api/GetSellAccountStat",
-        "methods": [
-            "GET"
-        ],
-        "description": "Report where a seller's account currently stands in the sell flow.\n\nOnly the seller who registered the account may query it. Answers for three stages\nonly — awaiting a login code, awaiting a two-step password, or under automated\nchecking — and reports the attempts, remaining time, password hint or checking\ndeadline relevant to that stage. Any other state, including an unregistered number,\nis rejected rather than reported.",
-        "request": {
-            "properties": {
-                "phone_number": {
-                    "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                    "examples": [
-                        "+967771234567"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "phone_number"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "phone_number": {
-                            "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                            "examples": [
-                                "+967771234567"
-                            ],
-                            "type": "string"
-                        },
-                        "stat": {
-                            "enum": [
-                                "code_checking",
-                                "password_checking",
-                                "wait_checking",
-                                "active",
-                                "reserved",
-                                "session_reserved",
-                                "delivered"
-                            ],
-                            "type": "string",
-                            "description": "Current stage of the sell flow. Only 'code_checking', 'password_checking' and 'wait_checking' are reported; any other state raises an error.",
-                            "examples": [
-                                "code_checking"
-                            ]
-                        },
-                        "remaining_attempts": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "default": null,
-                            "description": "Submission attempts left for the current stage. Present for 'code_checking' and 'password_checking' only.",
-                            "examples": [
-                                3
-                            ]
-                        },
-                        "seconds": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "default": null,
-                            "description": "Seconds left before the current stage expires and the account is released. Present for 'code_checking' and 'password_checking' only.",
-                            "examples": [
-                                120
-                            ]
-                        },
-                        "hint": {
-                            "anyOf": [
-                                {
-                                    "type": "string"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "default": null,
-                            "description": "Two-step verification password hint set on the account. Present for 'password_checking' only, and only when the account defines a hint.",
-                            "examples": [
-                                "my old pet"
-                            ]
-                        },
-                        "checked_at": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                },
-                                {
-                                    "type": "null"
-                                }
-                            ],
-                            "default": null,
-                            "description": "Unix timestamp (seconds, UTC) at which the automated checking period completes. Present for 'wait_checking' only.",
-                            "examples": [
-                                1754870400
-                            ]
-                        }
+                    "section": {
+                        "$ref": "#/$defs/AccountSection",
+                        "description": "Quality tier of the sessions to buy. Determines pricing and availability.",
+                        "examples": [
+                            "active"
+                        ]
                     },
-                    "required": [
-                        "phone_number",
-                        "stat"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "403": {
-                "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account"
-            },
-            "409": {
-                "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
-            }
-        }
-    },
-    "SellAccount": {
-        "path": "/api/SellAccount",
-        "methods": [
-            "POST"
-        ],
-        "description": "Start selling a Telegram account by requesting its login code.\n\nOpens a session against the given number and asks Telegram to send a login code,\nthen returns the delivery channel, the attempt budget and the expiry deadline.\nThe seller completes the flow by submitting that code via SetCodeAccount.\n\nThe account is released automatically if the code is not confirmed before expiry.",
-        "request": {
-            "properties": {
-                "phone_number": {
-                    "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                    "examples": [
-                        "+967771234567"
-                    ],
-                    "type": "string"
-                },
-                "section": {
-                    "anyOf": [
-                        {
-                            "enum": [
-                                "active",
-                                "spam",
-                                "frozen"
-                            ],
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "Expected quality tier of the account being sold. When omitted, the tier is resolved automatically during checking.",
-                    "examples": [
-                        "active"
-                    ]
-                }
-            },
-            "required": [
-                "phone_number"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "phone_number": {
-                            "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                            "examples": [
-                                "+967771234567"
-                            ],
-                            "type": "string"
-                        },
-                        "code_expiry_at": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                }
-                            ],
-                            "description": "Unix timestamp (seconds, UTC) after which the login code request expires and the sell attempt is discarded.",
-                            "examples": [
-                                1754870400
-                            ]
-                        },
-                        "attempts": {
-                            "description": "Number of code-submission attempts remaining for this account.",
-                            "examples": [
-                                3
-                            ],
-                            "type": "integer"
-                        },
-                        "type": {
-                            "enum": [
-                                "app",
-                                "email"
-                            ],
-                            "type": "string",
-                            "description": "Delivery channel Telegram used to send the login code.",
-                            "examples": [
-                                "app"
-                            ]
-                        }
+                    "session_type": {
+                        "$ref": "#/$defs/BuySessionType",
+                        "description": "Session file format to deliver. The '*_string' variants return a session string instead of a file.",
+                        "examples": [
+                            "pyrogram",
+                            "telethon_string"
+                        ]
                     },
-                    "required": [
-                        "phone_number",
-                        "code_expiry_at",
-                        "attempts",
-                        "type"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "403": {
-                "USER_BANNED_FROM_SELLING": "You are banned from selling accounts. Ban duration: {value}s"
-            },
-            "404": {
-                "PHONE_NUMBER_UNOCCUPIED": "The phone number is not registered on Telegram"
-            },
-            "409": {
-                "ACCOUNT_FOR_SELL_SECTION_CLOSED": "Selling is not allowed for {context[country]} country {context[section]} account section at the moment",
-                "SELL_ACCOUNT_STAT_ALREADY_EXISTS": "A sell process already exists for this account",
-                "SESSION_ALREADY_EXISTS": "A session already exists for this phone number"
-            }
-        }
-    },
-    "SetCodeAccount": {
-        "path": "/api/SetCodeAccount",
-        "methods": [
-            "POST"
-        ],
-        "description": "Submit the Telegram login code for an account being sold.\n\nEach call consumes one attempt. On success the account is registered and enters the\nautomated checking period, and the response describes that checking window.\n\nIf the account has two-step verification enabled the flow moves to the password stage\ninstead: when `password` was supplied it is applied immediately and checking proceeds,\notherwise the caller is told a password is required.",
-        "request": {
-            "properties": {
-                "phone_number": {
-                    "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                    "examples": [
-                        "+967771234567"
-                    ],
-                    "type": "string"
-                },
-                "code": {
-                    "description": "Telegram login verification code. Embedded spaces are stripped before validation.",
-                    "examples": [
-                        "12345"
-                    ],
-                    "type": "string"
-                },
-                "password": {
-                    "anyOf": [
-                        {
-                            "type": "string"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ],
-                    "default": null,
-                    "description": "Two-step verification password, supplied upfront. When the account requires one, it is applied immediately instead of returning SESSION_PASSWORD_NEEDED.",
-                    "examples": [
-                        "my-2fa-password"
-                    ]
-                }
-            },
-            "required": [
-                "phone_number",
-                "code"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "phone_number": {
-                            "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                            "examples": [
-                                "+967771234567"
-                            ],
-                            "type": "string"
-                        },
-                        "checked_at": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                }
-                            ],
-                            "description": "Unix timestamp (seconds, UTC) at which the account's automated checking period completes.",
-                            "examples": [
-                                1754870400
-                            ]
-                        }
+                    "qty": {
+                        "description": "Number of sessions to order. Must be greater than zero.",
+                        "examples": [
+                            5
+                        ],
+                        "exclusiveMinimum": 0,
+                        "type": "integer"
                     },
-                    "required": [
-                        "phone_number",
-                        "checked_at"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "400": {
-                "CHANGED_PASSWORD": "The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
-                "EXPIRED_VERIFICATION_CODE": "The verification code is expired. The operation was cancelled.",
-                "INVALID_PASSWORD": "The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
-                "INVALID_PHONE_NUMBER": "The phone_number is invalid. It may be prohibited, restricted, etc. The operation was cancelled.",
-                "INVALID_VERIFICATION_CODE": "The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"
-            },
-            "401": {
-                "SESSION_PASSWORD_NEEDED": "Two-step verification password is required to complete authentication for {value[account]}. Password hint: {value[hint]}. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"
-            },
-            "403": {
-                "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
-                "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account"
-            },
-            "404": {
-                "PHONE_NUMBER_UNOCCUPIED": "The phone number is not registered on Telegram"
-            },
-            "409": {
-                "EXPIRED_STAT": "This operation cannot be performed because the stat has expired",
-                "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
-            },
-            "500": {
-                "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
-            }
-        }
-    },
-    "SetPasswordAccount": {
-        "path": "/api/SetPasswordAccount",
-        "methods": [
-            "POST"
-        ],
-        "description": "Submit the two-step verification password for an account being sold.\n\nOnly valid while the account is awaiting a password. Each call consumes one attempt.\nOn success the account is registered and enters the automated checking period, and\nthe response describes that checking window.",
-        "request": {
-            "properties": {
-                "phone_number": {
-                    "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                    "examples": [
-                        "+967771234567"
-                    ],
-                    "type": "string"
-                },
-                "password": {
-                    "description": "Two-step verification password for an account awaiting password confirmation.",
-                    "examples": [
-                        "my-2fa-password"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "phone_number",
-                "password"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "phone_number": {
-                            "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
-                            "examples": [
-                                "+967771234567"
-                            ],
-                            "type": "string"
-                        },
-                        "checked_at": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                }
-                            ],
-                            "description": "Unix timestamp (seconds, UTC) at which the account's automated checking period completes.",
-                            "examples": [
-                                1754870400
-                            ]
-                        }
+                    "force_full": {
+                        "default": false,
+                        "description": "When true, the order fails unless the full requested quantity can be delivered; otherwise a partial delivery is accepted.",
+                        "type": "boolean"
                     },
-                    "required": [
-                        "phone_number",
-                        "checked_at"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {
-            "400": {
-                "CHANGED_PASSWORD": "The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
-                "INVALID_PASSWORD": "The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}"
-            },
-            "403": {
-                "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
-                "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account"
-            },
-            "409": {
-                "EXPIRED_STAT": "This operation cannot be performed because the stat has expired",
-                "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
-            },
-            "500": {
-                "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
-            }
-        }
-    },
-    "AvailableCountries": {
-        "path": "/api/AvailableCountries",
-        "methods": [
-            "GET"
-        ],
-        "description": "List the countries currently open for trading, grouped by quality tier.\n\nWith `operation=sell` each country maps to its selling price. With `operation=buy`\neach country maps to a stock info document describing what is available to buy.",
-        "request": {
-            "properties": {
-                "operation": {
-                    "enum": [
-                        "sell",
-                        "buy"
-                    ],
-                    "type": "string",
-                    "description": "Which side of the market to query: 'sell' lists countries open for selling, 'buy' lists countries with accounts in stock.",
-                    "examples": [
-                        "buy"
-                    ]
-                }
-            },
-            "required": [
-                "operation"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
+                    "include_json": {
+                        "default": false,
+                        "description": "When true, a JSON metadata file is delivered alongside each session.",
+                        "type": "boolean"
+                    }
                 },
-                "result": {
-                    "anyOf": [
-                        {
-                            "additionalProperties": {
+                "required": [
+                    "country_code",
+                    "section",
+                    "session_type",
+                    "qty"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "id": {
+                                "description": "Order identifier, used to poll delivery progress via GetBuySessionsOrder.",
+                                "examples": [
+                                    "507f1f77bcf86cd799439011"
+                                ],
+                                "type": "string"
+                            },
+                            "country_code": {
+                                "description": "ISO 3166-1 alpha-2 country code the sessions were ordered for, uppercased.",
+                                "examples": [
+                                    "YE"
+                                ],
+                                "type": "string"
+                            },
+                            "section": {
+                                "$ref": "#/$defs/AccountSection",
+                                "description": "Quality tier the sessions were ordered for.",
+                                "examples": [
+                                    "active"
+                                ]
+                            },
+                            "session_type": {
+                                "$ref": "#/$defs/BuySessionType",
+                                "description": "Session file format being delivered.",
+                                "examples": [
+                                    "pyrogram"
+                                ]
+                            },
+                            "qty": {
+                                "description": "Number of sessions requested in this order.",
+                                "examples": [
+                                    5
+                                ],
+                                "type": "integer"
+                            },
+                            "force_full": {
+                                "description": "Whether the order requires the full quantity to be delivered or fails.",
+                                "type": "boolean"
+                            },
+                            "include_json": {
+                                "description": "Whether a JSON metadata file is delivered alongside each session.",
+                                "type": "boolean"
+                            },
+                            "status": {
+                                "$ref": "#/$defs/OrderStatus",
+                                "default": "pending",
+                                "description": "Current lifecycle stage of the order.",
+                                "examples": [
+                                    "pending"
+                                ]
+                            },
+                            "ready_count": {
+                                "default": 0,
+                                "description": "Number of sessions prepared and ready for delivery so far.",
+                                "examples": [
+                                    2
+                                ],
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "country_code",
+                            "section",
+                            "session_type",
+                            "qty",
+                            "force_full",
+                            "include_json"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "403": {
+                    "USER_BANNED_FROM_BUYING": "You are banned from buying accounts. Ban duration: {value}s"
+                },
+                "409": {
+                    "ACCOUNT_FOR_BUY_SECTION_CLOSED": "Buying is not allowed for {context[country]} country {context[section]} account section at the moment",
+                    "INSUFFICIENT_BALANCE": "You are does not have enough balance for this operation",
+                    "NO_ACCOUNTS_AVAILABLE_FOR_COUNTRY": "No accounts available for purchase in this country"
+                }
+            }
+        },
+        "GetBuySessionsOrder": {
+            "path": "/api/GetBuySessionsOrder",
+            "methods": [
+                "GET"
+            ],
+            "description": "Poll the progress of a previously placed sessions order.\n\nReturns the same order record as BuySessions, with `status` and `ready_count`\nreflecting current delivery progress. Only the buyer who placed the order may read it.",
+            "request": {
+                "properties": {
+                    "order_id": {
+                        "description": "24-character hexadecimal MongoDB ObjectId identifying a buy-sessions order.",
+                        "examples": [
+                            "507f1f77bcf86cd799439011"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "order_id"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "id": {
+                                "description": "Order identifier, used to poll delivery progress via GetBuySessionsOrder.",
+                                "examples": [
+                                    "507f1f77bcf86cd799439011"
+                                ],
+                                "type": "string"
+                            },
+                            "country_code": {
+                                "description": "ISO 3166-1 alpha-2 country code the sessions were ordered for, uppercased.",
+                                "examples": [
+                                    "YE"
+                                ],
+                                "type": "string"
+                            },
+                            "section": {
+                                "$ref": "#/$defs/AccountSection",
+                                "description": "Quality tier the sessions were ordered for.",
+                                "examples": [
+                                    "active"
+                                ]
+                            },
+                            "session_type": {
+                                "$ref": "#/$defs/BuySessionType",
+                                "description": "Session file format being delivered.",
+                                "examples": [
+                                    "pyrogram"
+                                ]
+                            },
+                            "qty": {
+                                "description": "Number of sessions requested in this order.",
+                                "examples": [
+                                    5
+                                ],
+                                "type": "integer"
+                            },
+                            "force_full": {
+                                "description": "Whether the order requires the full quantity to be delivered or fails.",
+                                "type": "boolean"
+                            },
+                            "include_json": {
+                                "description": "Whether a JSON metadata file is delivered alongside each session.",
+                                "type": "boolean"
+                            },
+                            "status": {
+                                "$ref": "#/$defs/OrderStatus",
+                                "default": "pending",
+                                "description": "Current lifecycle stage of the order.",
+                                "examples": [
+                                    "pending"
+                                ]
+                            },
+                            "ready_count": {
+                                "default": 0,
+                                "description": "Number of sessions prepared and ready for delivery so far.",
+                                "examples": [
+                                    2
+                                ],
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "country_code",
+                            "section",
+                            "session_type",
+                            "qty",
+                            "force_full",
+                            "include_json"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "401": {
+                    "ORDER_ACCESS_DENIED": "You are not authorized to access this order"
+                },
+                "404": {
+                    "ORDER_NOT_FOUND": "Order {value} not found"
+                }
+            }
+        },
+        "GetCodeAccount": {
+            "path": "/api/GetCodeAccount",
+            "methods": [
+                "GET"
+            ],
+            "description": "Retrieve the Telegram login code and two-step password for a purchased account.\n\nOnly the buyer who reserved the account may call this, and only while it is still\nreserved. Each call consumes one attempt. On success the account session is logged\nout and handed over to the buyer.\n\nIf the account is found dead during retrieval the purchase is refunded — unless the\nattempt budget is already exhausted, in which case no refund is issued.",
+            "request": {
+                "properties": {
+                    "phone_number": {
+                        "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                        "examples": [
+                            "+967771234567"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "phone_number"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "phone_number": {
+                                "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                                "examples": [
+                                    "+967771234567"
+                                ],
+                                "type": "string"
+                            },
+                            "code": {
+                                "description": "Telegram login code retrieved from the purchased account.",
+                                "examples": [
+                                    12345
+                                ],
+                                "type": "integer"
+                            },
+                            "password": {
+                                "description": "Two-step verification password set on the purchased account.",
+                                "examples": [
+                                    "my-2fa-password"
+                                ],
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "phone_number",
+                            "code",
+                            "password"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "403": {
+                    "INVALID_BUYER_ACCOUNT_OWNER": "You are not the owner of this buy account"
+                },
+                "404": {
+                    "NOT_FOUND_OTP_CODE": "OTP code is not available for this session at the moment"
+                },
+                "409": {
+                    "ACCOUNT_DEAD_DURING_GET_CODE": "Account became dead during code retrieval process",
+                    "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
+                },
+                "500": {
+                    "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
+                }
+            }
+        },
+        "GetSellAccountStat": {
+            "path": "/api/GetSellAccountStat",
+            "methods": [
+                "GET"
+            ],
+            "description": "Report where a seller's account currently stands in the sell flow.\n\nOnly the seller who registered the account may query it. Answers for three stages\nonly — awaiting a login code, awaiting a two-step password, or under automated\nchecking — and reports the attempts, remaining time, password hint or checking\ndeadline relevant to that stage. Any other state, including an unregistered number,\nis rejected rather than reported.",
+            "request": {
+                "properties": {
+                    "phone_number": {
+                        "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                        "examples": [
+                            "+967771234567"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "phone_number"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "phone_number": {
+                                "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                                "examples": [
+                                    "+967771234567"
+                                ],
+                                "type": "string"
+                            },
+                            "stat": {
+                                "description": "Current stage of the sell flow. Any other state raises an error instead of being reported.",
+                                "enum": [
+                                    "code_checking",
+                                    "password_checking",
+                                    "wait_checking"
+                                ],
+                                "examples": [
+                                    "code_checking"
+                                ],
+                                "type": "string"
+                            },
+                            "remaining_attempts": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Submission attempts left for the current stage. Present for 'code_checking' and 'password_checking' only.",
+                                "examples": [
+                                    3
+                                ]
+                            },
+                            "seconds": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Seconds left before the current stage expires and the account is released. Present for 'code_checking' and 'password_checking' only.",
+                                "examples": [
+                                    120
+                                ]
+                            },
+                            "hint": {
+                                "anyOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Two-step verification password hint set on the account. Present for 'password_checking' only, and only when the account defines a hint.",
+                                "examples": [
+                                    "my old pet"
+                                ]
+                            },
+                            "checked_at": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    },
+                                    {
+                                        "type": "null"
+                                    }
+                                ],
+                                "default": null,
+                                "description": "Unix timestamp (seconds, UTC) at which the automated checking period completes. Present for 'wait_checking' only.",
+                                "examples": [
+                                    1754870400
+                                ]
+                            }
+                        },
+                        "required": [
+                            "phone_number",
+                            "stat"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "403": {
+                    "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account"
+                },
+                "409": {
+                    "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
+                }
+            }
+        },
+        "SellAccount": {
+            "path": "/api/SellAccount",
+            "methods": [
+                "POST"
+            ],
+            "description": "Start selling a Telegram account by requesting its login code.\n\nOpens a session against the given number and asks Telegram to send a login code,\nthen returns the delivery channel, the attempt budget and the expiry deadline.\nThe seller completes the flow by submitting that code via SetCodeAccount.\n\nThe account is released automatically if the code is not confirmed before expiry.",
+            "request": {
+                "properties": {
+                    "phone_number": {
+                        "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                        "examples": [
+                            "+967771234567"
+                        ],
+                        "type": "string"
+                    },
+                    "section": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/$defs/AccountSection"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "default": null,
+                        "description": "Expected quality tier of the account being sold. When omitted, the tier is resolved automatically during checking.",
+                        "examples": [
+                            "active"
+                        ]
+                    }
+                },
+                "required": [
+                    "phone_number"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "phone_number": {
+                                "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                                "examples": [
+                                    "+967771234567"
+                                ],
+                                "type": "string"
+                            },
+                            "code_expiry_at": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ],
+                                "description": "Unix timestamp (seconds, UTC) after which the login code request expires and the sell attempt is discarded.",
+                                "examples": [
+                                    1754870400
+                                ]
+                            },
+                            "attempts": {
+                                "description": "Number of code-submission attempts remaining for this account.",
+                                "examples": [
+                                    3
+                                ],
+                                "type": "integer"
+                            },
+                            "type": {
+                                "$ref": "#/$defs/SendCodeType",
+                                "description": "Delivery channel Telegram used to send the login code.",
+                                "examples": [
+                                    "app"
+                                ]
+                            }
+                        },
+                        "required": [
+                            "phone_number",
+                            "code_expiry_at",
+                            "attempts",
+                            "type"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "403": {
+                    "USER_BANNED_FROM_SELLING": "You are banned from selling accounts. Ban duration: {value}s"
+                },
+                "404": {
+                    "PHONE_NUMBER_UNOCCUPIED": "The phone number is not registered on Telegram"
+                },
+                "409": {
+                    "ACCOUNT_FOR_SELL_SECTION_CLOSED": "Selling is not allowed for {context[country]} country {context[section]} account section at the moment",
+                    "SELL_ACCOUNT_STAT_ALREADY_EXISTS": "A sell process already exists for this account",
+                    "SESSION_ALREADY_EXISTS": "A session already exists for this phone number"
+                }
+            }
+        },
+        "SetCodeAccount": {
+            "path": "/api/SetCodeAccount",
+            "methods": [
+                "POST"
+            ],
+            "description": "Submit the Telegram login code for an account being sold.\n\nEach call consumes one attempt. On success the account is registered and enters the\nautomated checking period, and the response describes that checking window.\n\nIf the account has two-step verification enabled the flow moves to the password stage\ninstead: when `password` was supplied it is applied immediately and checking proceeds,\notherwise the caller is told a password is required.",
+            "request": {
+                "properties": {
+                    "phone_number": {
+                        "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                        "examples": [
+                            "+967771234567"
+                        ],
+                        "type": "string"
+                    },
+                    "code": {
+                        "description": "Telegram login verification code. Embedded spaces are stripped before validation.",
+                        "examples": [
+                            "12345"
+                        ],
+                        "type": "string"
+                    },
+                    "password": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "default": null,
+                        "description": "Two-step verification password, supplied upfront. When the account requires one, it is applied immediately instead of returning SESSION_PASSWORD_NEEDED.",
+                        "examples": [
+                            "my-2fa-password"
+                        ]
+                    }
+                },
+                "required": [
+                    "phone_number",
+                    "code"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "phone_number": {
+                                "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                                "examples": [
+                                    "+967771234567"
+                                ],
+                                "type": "string"
+                            },
+                            "checked_at": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ],
+                                "description": "Unix timestamp (seconds, UTC) at which the account's automated checking period completes.",
+                                "examples": [
+                                    1754870400
+                                ]
+                            }
+                        },
+                        "required": [
+                            "phone_number",
+                            "checked_at"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "400": {
+                    "CHANGED_PASSWORD": "The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
+                    "EXPIRED_VERIFICATION_CODE": "The verification code is expired. The operation was cancelled.",
+                    "INVALID_PASSWORD": "The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
+                    "INVALID_PHONE_NUMBER": "The phone_number is invalid. It may be prohibited, restricted, etc. The operation was cancelled.",
+                    "INVALID_VERIFICATION_CODE": "The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"
+                },
+                "401": {
+                    "SESSION_PASSWORD_NEEDED": "Two-step verification password is required to complete authentication for {value[account]}. Password hint: {value[hint]}. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"
+                },
+                "403": {
+                    "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
+                    "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account"
+                },
+                "404": {
+                    "PHONE_NUMBER_UNOCCUPIED": "The phone number is not registered on Telegram"
+                },
+                "409": {
+                    "EXPIRED_STAT": "This operation cannot be performed because the stat has expired",
+                    "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
+                },
+                "500": {
+                    "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
+                }
+            }
+        },
+        "SetPasswordAccount": {
+            "path": "/api/SetPasswordAccount",
+            "methods": [
+                "POST"
+            ],
+            "description": "Submit the two-step verification password for an account being sold.\n\nOnly valid while the account is awaiting a password. Each call consumes one attempt.\nOn success the account is registered and enters the automated checking period, and\nthe response describes that checking window.",
+            "request": {
+                "properties": {
+                    "phone_number": {
+                        "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                        "examples": [
+                            "+967771234567"
+                        ],
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "Two-step verification password for an account awaiting password confirmation.",
+                        "examples": [
+                            "my-2fa-password"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "phone_number",
+                    "password"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "phone_number": {
+                                "description": "Telegram account phone number in international E.164 format, including the leading '+'.",
+                                "examples": [
+                                    "+967771234567"
+                                ],
+                                "type": "string"
+                            },
+                            "checked_at": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer"
+                                    },
+                                    {
+                                        "type": "number"
+                                    }
+                                ],
+                                "description": "Unix timestamp (seconds, UTC) at which the account's automated checking period completes.",
+                                "examples": [
+                                    1754870400
+                                ]
+                            }
+                        },
+                        "required": [
+                            "phone_number",
+                            "checked_at"
+                        ],
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {
+                "400": {
+                    "CHANGED_PASSWORD": "The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}",
+                    "INVALID_PASSWORD": "The password is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}"
+                },
+                "403": {
+                    "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
+                    "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account"
+                },
+                "409": {
+                    "EXPIRED_STAT": "This operation cannot be performed because the stat has expired",
+                    "INVALID_SELL_SESSION_STAT": "Sell session is not in a valid stat to perform this operation"
+                },
+                "500": {
+                    "UNKNOW_ERROR": "Unknow error occurred. Error: {context}"
+                }
+            }
+        },
+        "AvailableCountries": {
+            "path": "/api/AvailableCountries",
+            "methods": [
+                "GET"
+            ],
+            "description": "List the countries currently open for trading, grouped by quality tier.\n\nWith `operation=sell` each country maps to its selling price. With `operation=buy`\neach country maps to a stock info document describing what is available to buy.",
+            "request": {
+                "properties": {
+                    "operation": {
+                        "$ref": "#/$defs/AccountOperation",
+                        "description": "Which side of the market to query: 'sell' lists countries open for selling, 'buy' lists countries with accounts in stock.",
+                        "examples": [
+                            "buy"
+                        ]
+                    }
+                },
+                "required": [
+                    "operation"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": {
+                                    "additionalProperties": {
+                                        "anyOf": [
+                                            {
+                                                "type": "integer"
+                                            },
+                                            {
+                                                "type": "number"
+                                            }
+                                        ]
+                                    },
+                                    "type": "object"
+                                },
+                                "propertyNames": {
+                                    "$ref": "#/$defs/AccountSection"
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "additionalProperties": {
+                                    "additionalProperties": {
+                                        "properties": {
+                                            "price": {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "integer"
+                                                    },
+                                                    {
+                                                        "type": "number"
+                                                    }
+                                                ]
+                                            },
+                                            "qty": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "required": [
+                                            "price",
+                                            "qty"
+                                        ],
+                                        "type": "object"
+                                    },
+                                    "type": "object"
+                                },
+                                "propertyNames": {
+                                    "$ref": "#/$defs/AccountSection"
+                                },
+                                "type": "object"
+                            }
+                        ],
+                        "x-variants": "Response shape depends on `operation`: 'sell' returns a price per country ({section: {country_code: price}}); 'buy' returns a stock info document per country ({section: {country_code: {...}}})."
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {}
+        },
+        "AvailableCountriesBySection": {
+            "path": "/api/AvailableCountriesBySection",
+            "methods": [
+                "GET"
+            ],
+            "description": "List the countries currently open for trading within a single quality tier.\n\nSame data as AvailableCountries, narrowed to `section` and returned flat: keyed by\ncountry code instead of grouped by tier.",
+            "request": {
+                "properties": {
+                    "operation": {
+                        "$ref": "#/$defs/AccountOperation",
+                        "description": "Which side of the market to query: 'sell' lists countries open for selling, 'buy' lists countries with accounts in stock.",
+                        "examples": [
+                            "buy"
+                        ]
+                    },
+                    "section": {
+                        "$ref": "#/$defs/AccountSection",
+                        "description": "Quality tier to narrow the country listing to.",
+                        "examples": [
+                            "active"
+                        ]
+                    }
+                },
+                "required": [
+                    "operation",
+                    "section"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "anyOf": [
+                            {
                                 "additionalProperties": {
                                     "anyOf": [
                                         {
@@ -1010,18 +1090,7 @@
                                 },
                                 "type": "object"
                             },
-                            "propertyNames": {
-                                "enum": [
-                                    "active",
-                                    "spam",
-                                    "frozen"
-                                ],
-                                "type": "string"
-                            },
-                            "type": "object"
-                        },
-                        {
-                            "additionalProperties": {
+                            {
                                 "additionalProperties": {
                                     "properties": {
                                         "price": {
@@ -1045,77 +1114,216 @@
                                     "type": "object"
                                 },
                                 "type": "object"
-                            },
-                            "propertyNames": {
-                                "enum": [
-                                    "active",
-                                    "spam",
-                                    "frozen"
+                            }
+                        ],
+                        "x-variants": "Response shape depends on `operation`: 'sell' returns a price per country ({country_code: price}); 'buy' returns a stock info document per country ({country_code: {...}})."
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            },
+            "errors": {}
+        },
+        "GetCountryInfo": {
+            "path": "/api/GetCountryInfo",
+            "methods": [
+                "GET"
+            ],
+            "description": "Describe one country: its identity and its full buy/sell terms per quality tier.\n\nBuy terms carry the price and the quantity currently in stock; sell terms carry the\nprice and the automated checking duration. Fields are omitted where the tier is\nclosed, out of stock, or unconfigured.",
+            "request": {
+                "properties": {
+                    "country_code": {
+                        "description": "ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase.",
+                        "examples": [
+                            "ye",
+                            "sa"
+                        ],
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "country_code"
+                ],
+                "type": "object"
+            },
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "name": {
+                                "description": "English country name.",
+                                "examples": [
+                                    "Yemen"
                                 ],
                                 "type": "string"
                             },
-                            "type": "object"
-                        }
-                    ],
-                    "x-variants": "Response shape depends on `operation`: 'sell' returns a price per country ({section: {country_code: price}}); 'buy' returns a stock info document per country ({section: {country_code: {...}}})."
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {}
-    },
-    "AvailableCountriesBySection": {
-        "path": "/api/AvailableCountriesBySection",
-        "methods": [
-            "GET"
-        ],
-        "description": "List the countries currently open for trading within a single quality tier.\n\nSame data as AvailableCountries, narrowed to `section` and returned flat: keyed by\ncountry code instead of grouped by tier.",
-        "request": {
-            "properties": {
-                "operation": {
-                    "enum": [
-                        "sell",
-                        "buy"
-                    ],
-                    "type": "string",
-                    "description": "Which side of the market to query: 'sell' lists countries open for selling, 'buy' lists countries with accounts in stock.",
-                    "examples": [
-                        "buy"
-                    ]
+                            "country_code": {
+                                "description": "International dialing prefix, without the leading '+'.",
+                                "examples": [
+                                    967
+                                ],
+                                "type": "integer"
+                            },
+                            "region_code": {
+                                "description": "ISO 3166-1 alpha-2 country code, uppercased.",
+                                "examples": [
+                                    "YE"
+                                ],
+                                "type": "string"
+                            },
+                            "flag": {
+                                "description": "Country flag as a Unicode regional-indicator emoji.",
+                                "examples": [
+                                    "🇾🇪"
+                                ],
+                                "type": "string"
+                            },
+                            "buy_options": {
+                                "additionalProperties": {
+                                    "properties": {
+                                        "is_open": {
+                                            "type": "boolean"
+                                        },
+                                        "price": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "integer"
+                                                },
+                                                {
+                                                    "type": "number"
+                                                }
+                                            ]
+                                        },
+                                        "qty": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "is_open"
+                                    ],
+                                    "type": "object"
+                                },
+                                "description": "Buying availability per quality tier. 'price' and 'qty' are omitted when the tier is closed or out of stock.",
+                                "examples": [
+                                    {
+                                        "active": {
+                                            "is_open": true,
+                                            "price": 1.5,
+                                            "qty": 12
+                                        }
+                                    }
+                                ],
+                                "propertyNames": {
+                                    "$ref": "#/$defs/AccountSection"
+                                },
+                                "type": "object"
+                            },
+                            "sell_options": {
+                                "additionalProperties": {
+                                    "properties": {
+                                        "is_open": {
+                                            "type": "boolean"
+                                        },
+                                        "price": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "integer"
+                                                },
+                                                {
+                                                    "type": "number"
+                                                }
+                                            ]
+                                        },
+                                        "checking_time": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "required": [
+                                        "is_open"
+                                    ],
+                                    "type": "object"
+                                },
+                                "description": "Selling availability per quality tier. 'price' and 'checking_time' are omitted when the tier is closed or unconfigured.",
+                                "examples": [
+                                    {
+                                        "active": {
+                                            "checking_time": 86400,
+                                            "is_open": true,
+                                            "price": 1.2
+                                        }
+                                    }
+                                ],
+                                "propertyNames": {
+                                    "$ref": "#/$defs/AccountSection"
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "country_code",
+                            "region_code",
+                            "flag",
+                            "buy_options",
+                            "sell_options"
+                        ],
+                        "type": "object"
+                    }
                 },
-                "section": {
-                    "enum": [
-                        "active",
-                        "spam",
-                        "frozen"
-                    ],
-                    "type": "string",
-                    "description": "Quality tier to narrow the country listing to.",
-                    "examples": [
-                        "active"
-                    ]
-                }
+                "required": [
+                    "result"
+                ],
+                "type": "object"
             },
-            "required": [
-                "operation",
-                "section"
-            ],
-            "type": "object"
+            "errors": {}
         },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "anyOf": [
-                        {
-                            "additionalProperties": {
+        "GetBalance": {
+            "path": "/api/GetBalance",
+            "methods": [
+                "GET"
+            ],
+            "description": "Return the caller's wallet balances, broken down by type, along with their total.",
+            "response": {
+                "properties": {
+                    "ok": {
+                        "const": true,
+                        "default": true,
+                        "type": "boolean"
+                    },
+                    "result": {
+                        "properties": {
+                            "balances": {
+                                "additionalProperties": {
+                                    "anyOf": [
+                                        {
+                                            "type": "integer"
+                                        },
+                                        {
+                                            "type": "number"
+                                        }
+                                    ]
+                                },
+                                "description": "Available balance broken down by wallet type.",
+                                "examples": [
+                                    {
+                                        "buy": 3.0,
+                                        "referral": 0.25,
+                                        "sell": 10.5
+                                    }
+                                ],
+                                "propertyNames": {
+                                    "$ref": "#/$defs/BalanceType"
+                                },
+                                "type": "object"
+                            },
+                            "total": {
                                 "anyOf": [
                                     {
                                         "type": "integer"
@@ -1123,285 +1331,26 @@
                                     {
                                         "type": "number"
                                     }
+                                ],
+                                "description": "Sum of all wallet balances.",
+                                "examples": [
+                                    13.75
                                 ]
-                            },
-                            "type": "object"
+                            }
                         },
-                        {
-                            "additionalProperties": {
-                                "properties": {
-                                    "price": {
-                                        "anyOf": [
-                                            {
-                                                "type": "integer"
-                                            },
-                                            {
-                                                "type": "number"
-                                            }
-                                        ]
-                                    },
-                                    "qty": {
-                                        "type": "integer"
-                                    }
-                                },
-                                "required": [
-                                    "price",
-                                    "qty"
-                                ],
-                                "type": "object"
-                            },
-                            "type": "object"
-                        }
-                    ],
-                    "x-variants": "Response shape depends on `operation`: 'sell' returns a price per country ({country_code: price}); 'buy' returns a stock info document per country ({country_code: {...}})."
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {}
-    },
-    "GetCountryInfo": {
-        "path": "/api/GetCountryInfo",
-        "methods": [
-            "GET"
-        ],
-        "description": "Describe one country: its identity and its full buy/sell terms per quality tier.\n\nBuy terms carry the price and the quantity currently in stock; sell terms carry the\nprice and the automated checking duration. Fields are omitted where the tier is\nclosed, out of stock, or unconfigured.",
-        "request": {
-            "properties": {
-                "country_code": {
-                    "description": "ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase.",
-                    "examples": [
-                        "ye",
-                        "sa"
-                    ],
-                    "type": "string"
-                }
-            },
-            "required": [
-                "country_code"
-            ],
-            "type": "object"
-        },
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
+                        "required": [
+                            "balances",
+                            "total"
+                        ],
+                        "type": "object"
+                    }
                 },
-                "result": {
-                    "properties": {
-                        "name": {
-                            "description": "English country name.",
-                            "examples": [
-                                "Yemen"
-                            ],
-                            "type": "string"
-                        },
-                        "country_code": {
-                            "description": "International dialing prefix, without the leading '+'.",
-                            "examples": [
-                                967
-                            ],
-                            "type": "integer"
-                        },
-                        "region_code": {
-                            "description": "ISO 3166-1 alpha-2 country code, uppercased.",
-                            "examples": [
-                                "YE"
-                            ],
-                            "type": "string"
-                        },
-                        "flag": {
-                            "description": "Country flag as a Unicode regional-indicator emoji.",
-                            "examples": [
-                                "🇾🇪"
-                            ],
-                            "type": "string"
-                        },
-                        "buy_options": {
-                            "additionalProperties": {
-                                "properties": {
-                                    "is_open": {
-                                        "type": "boolean"
-                                    },
-                                    "price": {
-                                        "anyOf": [
-                                            {
-                                                "type": "integer"
-                                            },
-                                            {
-                                                "type": "number"
-                                            }
-                                        ]
-                                    },
-                                    "qty": {
-                                        "type": "integer"
-                                    }
-                                },
-                                "required": [
-                                    "is_open"
-                                ],
-                                "type": "object"
-                            },
-                            "description": "Buying availability per quality tier. 'price' and 'qty' are omitted when the tier is closed or out of stock.",
-                            "examples": [
-                                {
-                                    "active": {
-                                        "is_open": true,
-                                        "price": 1.5,
-                                        "qty": 12
-                                    }
-                                }
-                            ],
-                            "propertyNames": {
-                                "enum": [
-                                    "active",
-                                    "spam",
-                                    "frozen"
-                                ],
-                                "type": "string"
-                            },
-                            "type": "object"
-                        },
-                        "sell_options": {
-                            "additionalProperties": {
-                                "properties": {
-                                    "is_open": {
-                                        "type": "boolean"
-                                    },
-                                    "price": {
-                                        "anyOf": [
-                                            {
-                                                "type": "integer"
-                                            },
-                                            {
-                                                "type": "number"
-                                            }
-                                        ]
-                                    },
-                                    "checking_time": {
-                                        "type": "integer"
-                                    }
-                                },
-                                "required": [
-                                    "is_open"
-                                ],
-                                "type": "object"
-                            },
-                            "description": "Selling availability per quality tier. 'price' and 'checking_time' are omitted when the tier is closed or unconfigured.",
-                            "examples": [
-                                {
-                                    "active": {
-                                        "checking_time": 86400,
-                                        "is_open": true,
-                                        "price": 1.2
-                                    }
-                                }
-                            ],
-                            "propertyNames": {
-                                "enum": [
-                                    "active",
-                                    "spam",
-                                    "frozen"
-                                ],
-                                "type": "string"
-                            },
-                            "type": "object"
-                        }
-                    },
-                    "required": [
-                        "name",
-                        "country_code",
-                        "region_code",
-                        "flag",
-                        "buy_options",
-                        "sell_options"
-                    ],
-                    "type": "object"
-                }
+                "required": [
+                    "result"
+                ],
+                "type": "object"
             },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {}
-    },
-    "GetBalance": {
-        "path": "/api/GetBalance",
-        "methods": [
-            "GET"
-        ],
-        "description": "Return the caller's wallet balances, broken down by type, along with their total.",
-        "response": {
-            "properties": {
-                "ok": {
-                    "const": true,
-                    "default": true,
-                    "type": "boolean"
-                },
-                "result": {
-                    "properties": {
-                        "balances": {
-                            "additionalProperties": {
-                                "anyOf": [
-                                    {
-                                        "type": "integer"
-                                    },
-                                    {
-                                        "type": "number"
-                                    }
-                                ]
-                            },
-                            "description": "Available balance broken down by wallet type.",
-                            "examples": [
-                                {
-                                    "buy": 3.0,
-                                    "referral": 0.25,
-                                    "sell": 10.5
-                                }
-                            ],
-                            "propertyNames": {
-                                "enum": [
-                                    "sell",
-                                    "buy",
-                                    "referral"
-                                ],
-                                "type": "string"
-                            },
-                            "type": "object"
-                        },
-                        "total": {
-                            "anyOf": [
-                                {
-                                    "type": "integer"
-                                },
-                                {
-                                    "type": "number"
-                                }
-                            ],
-                            "description": "Sum of all wallet balances.",
-                            "examples": [
-                                13.75
-                            ]
-                        }
-                    },
-                    "required": [
-                        "balances",
-                        "total"
-                    ],
-                    "type": "object"
-                }
-            },
-            "required": [
-                "result"
-            ],
-            "type": "object"
-        },
-        "errors": {}
+            "errors": {}
+        }
     }
 }

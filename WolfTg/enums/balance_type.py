@@ -5,11 +5,11 @@ from enum import auto
 
 from .._compat import StrEnum
 
-class UserBalanceType(StrEnum):
+class BalanceType(StrEnum):
     SELL = auto()
     BUY = auto()
     REFERRAL = auto()
 
 __all__ = (
-    "UserBalanceType", 
+    "BalanceType", 
 )

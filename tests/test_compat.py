@@ -17,7 +17,7 @@ from WolfTg.enums import (
     BuySessionType,
     OrderStatus,
     SendCodeType,
-    UserBalanceType,
+    BalanceType,
 )
 from WolfTg.methods import BuySessions
 
@@ -69,7 +69,7 @@ def test_members_are_real_strings():
         (BuySessionType.TDATA, "tdata"),
         (OrderStatus.PENDING, "pending"),
         (OrderStatus.CANCELLING, "cancelling"),
-        (UserBalanceType.REFERRAL, "referral"),
+        (BalanceType.REFERRAL, "referral"),
         (SendCodeType.EMAIL, "email"),
     ],
 )

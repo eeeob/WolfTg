@@ -49,8 +49,7 @@ def start() -> None:
     shutil.rmtree(DEST, ignore_errors=True)
     DEST.mkdir()
 
-    with open(SOURCE, "r", encoding="utf-8") as f:
-        errors: dict[str, dict[str, str]] = json.load(f)
+    errors: dict[str, dict[str, str]] = json.loads(SOURCE.read_text(encoding="utf-8"))
     
     all_text = AUTO_GENERATED_TEMPLATE + "\n\n"
 

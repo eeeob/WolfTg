@@ -4,11 +4,11 @@
 from typing import Dict
 
 from ..utils.typings import Number
-from ..enums import UserBalanceType
+from ..enums import BalanceType
 from .base import ApiObject
 
 class GetBalanceResult(ApiObject):
-    balances: Dict[UserBalanceType, Number]
+    balances: Dict[BalanceType, Number]
     """Available balance broken down by wallet type."""
 
     total: Number

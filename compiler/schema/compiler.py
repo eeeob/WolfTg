@@ -3,7 +3,7 @@
 Reads `compiler/schema/source.json` -- the API's JSON-Schema dump -- and emits
 the three mirrored packages the SDK exposes, one symbol per module:
 
-    WolfTg/enums/     a StrEnum per distinct enum value-set
+    WolfTg/enums/     a StrEnum per titled enum
     WolfTg/types/     an ApiObject per result shape, plus result type aliases
     WolfTg/methods/   an ApiMethod per API method
 
@@ -14,10 +14,14 @@ One module per *public* symbol. The anonymous objects nested inside a result
 are written into whichever file uses them, repeated rather than shared, so no
 two-field helper ends up in a module of its own.
 
-Everything is derived from the schema. The two things it cannot tell us are the
-names of its inline enums and which of its scalars map onto the SDK's own
-validated types; both live in the CONFIGURATION block below. Everything after
-it is generic.
+An enum carrying a `title` becomes a named class in `WolfTg/enums/`; one
+without stays inline as a `Literal`, since an untitled value set is just what
+a single field accepts rather than a type in its own right.
+
+Everything is derived from the schema. The one thing it cannot tell us is which
+of its scalars map onto the SDK's own validated types, which is the
+SCALAR_HINTS table in the CONFIGURATION block below. Everything after that
+block is generic.
 """
 
 from dataclasses import dataclass, field
@@ -32,6 +36,7 @@ import shutil
 
 _SNAKE1_PATTERN = re.compile(r"(.)([A-Z][a-z]+)")
 _SNAKE2_PATTERN = re.compile(r"([a-z0-9])([A-Z])")
+_STRING_PATTERN = re.compile(r"'[^']*'|\"[^\"]*\"")
 
 
 # ===========================================================================
@@ -105,33 +110,10 @@ PRIVATE_PREFIX = "_"
 # property name of its own to borrow: `_AvailableCountriesResultItem`.
 MAP_ITEM_SUFFIX = "item"
 
-# Segments the compiler appends to a schema path as it descends, marking a
-# step that has no property name of its own. They show up in derived model
-# names, so they read as words: `GetCountryInfo.result.buy_options.value`.
+# A segment the compiler appends to a schema path as it descends into a map,
+# marking a step with no property name of its own. It shows up in derived
+# model names, so it reads as a word: `GetCountryInfo.result.buy_options.value`.
 VALUE_SEGMENT = "value"
-KEY_SEGMENT = "key"
-
-# Value-set -> class name. Keyed by frozenset so reordering a schema `enum`
-# list cannot silently orphan an entry. An unregistered value-set still
-# compiles: it gets a name derived from where it sits, plus a warning.
-ENUM_NAMES: dict[frozenset, str] = {
-    frozenset(("sell", "buy")): "AccountOperation",
-    frozenset(("active", "spam", "frozen")): "AccountSection",
-    frozenset((
-        "pyrogram", "pyrogram_string", "kurigram", "kurigram_string",
-        "telethon", "telethon_string", "tdata",
-    )): "BuySessionType",
-    frozenset((
-        "code_checking", "password_checking", "wait_checking",
-        "active", "reserved", "session_reserved", "delivered",
-    )): "SellAccountStat",
-    frozenset((
-        "pending", "processing", "delivering",
-        "delivered", "cancelling", "cancelled",
-    )): "OrderStatus",
-    frozenset(("sell", "buy", "referral")): "UserBalanceType",
-    frozenset(("app", "email")): "SendCodeType",
-}
 
 # (field name, JSON type) -> validated scalar from `WolfTg.utils.typings`.
 # Keyed on the type too, because the same name means different things at
@@ -153,6 +135,9 @@ OPTIONAL_TYPE = "Optional"
 ANY_TYPE = "Any"
 NONE_TYPE = "None"
 
+# What an enum the schema never titled compiles to, inline at the use site.
+LITERAL_TYPE = "Literal"
+
 # The one name for "an int or a float" -- the API spells amounts either way.
 NUMBER_TYPE = "Number"
 
@@ -160,7 +145,9 @@ NUMBER_TYPE = "Number"
 DEFAULT_KEY_TYPE = "str"
 
 # Imported from `typing`; everything else there is left alone.
-TYPING_NAMES = frozenset((ANY_TYPE, DICT_TYPE, OPTIONAL_TYPE, UNION_TYPE, "List", "Tuple"))
+TYPING_NAMES = frozenset((
+    ANY_TYPE, DICT_TYPE, LITERAL_TYPE, OPTIONAL_TYPE, UNION_TYPE, "List", "Tuple",
+))
 
 # Imported from TYPINGS_MODULE. `Number` arrives there from `pytools.typings`,
 # which `WolfTg.utils.typings` re-exports wholesale.
@@ -180,6 +167,17 @@ IMPORT_ORDER = (
 
 # --- schema vocabulary -----------------------------------------------------
 
+# Top-level shape of the source dump: named schemas endpoints are free to
+# reference, and the endpoints themselves.
+DEFS_KEY = "$defs"
+ENDPOINTS_KEY = "endpoints"
+
+# A `{"$ref": "#/$defs/AccountSection"}` node points at a $defs entry instead
+# of repeating it. Compiling the pointed-to schema is what gives a titled enum
+# the same class no matter how many places reference it.
+REF_KEY = "$ref"
+REF_PREFIX = f"#/{DEFS_KEY}/"
+
 # Keys of one method entry in the source dump.
 PATH_KEY = "path"
 VERBS_KEY = "methods"
@@ -195,10 +193,12 @@ RESULT_KEY = "result"
 # cannot express it.
 VARIANTS_KEY = "x-variants"
 
-# Standard JSON-Schema keywords.
+# Standard JSON-Schema keywords. `title` on an enum node is what names the
+# generated class; an enum without one stays inline as a `Literal`.
 PROPERTIES_KEY = "properties"
 REQUIRED_KEY = "required"
 ENUM_KEY = "enum"
+TITLE_KEY = "title"
 ANY_OF_KEY = "anyOf"
 CONST_KEY = "const"
 TYPE_KEY = "type"
@@ -302,9 +302,13 @@ def map_key_names(text: str) -> list[str]:
 
 
 def tokens(expr: str) -> list[str]:
-    """The identifiers inside a rendered type expression."""
+    """The identifiers inside a rendered type expression.
 
-    return re.findall(r"[A-Za-z_][A-Za-z0-9_]*", expr)
+    Quoted text is blanked first: the members of a `Literal['buy', 'sell']`
+    are data, and must not be mistaken for symbols needing an import.
+    """
+
+    return re.findall(r"[A-Za-z_][A-Za-z0-9_]*", _STRING_PATTERN.sub(" ", expr))
 
 
 def docstring(text: str, indent: str) -> str:
@@ -602,7 +606,7 @@ class Registry:
     """Every symbol emitted, de-duplicated."""
 
     def __init__(self) -> None:
-        self.enums: dict[frozenset, Enum] = {}
+        self.enums: dict[str, Enum] = {}
         self.models: list[Model] = []
         self.aliases: list[Alias] = []
         self.methods: list[Method] = []
@@ -628,17 +632,21 @@ class Registry:
 
     # --- enums ---
 
-    def enum(self, values: list[str], path: str) -> str:
-        key = frozenset(values)
+    def enum(self, name: str, values: list[str], path: str) -> str:
+        """Register the enum class the schema titled `name`.
 
-        if key in self.enums:
-            return self.enums[key].name
+        The same title is expected to carry the same members everywhere it
+        appears; if it does not, the first one wins and the clash is reported
+        rather than silently resolved.
+        """
 
-        if (name := ENUM_NAMES.get(key)) is None:
-            name = pascal(path.split(".")[-1])
-            print(f"  ! unnamed enum at {path} -> {name}; add it to ENUM_NAMES")
+        if (existing := self.enums.get(name)) is not None:
+            if existing.values != values:
+                print(f"  ! {name} at {path} has different members; keeping the first")
 
-        self.enums[key] = Enum(name, values)
+            return name
+
+        self.enums[name] = Enum(name, values)
         return name
 
     # --- models ---
@@ -701,10 +709,16 @@ class TypeCompiler:
     handed to whichever unit is being built via `take_inline()`. Two units
     needing the same shape each get their own copy, which keeps every
     generated file readable on its own.
+
+    `defs` is the schema's `$defs` table -- every named, reusable shape a
+    `$ref` can point at. Resolving a ref just compiles the pointed-to schema,
+    so a `$ref`'d enum goes through the same titled/untitled rule as one
+    written out in place, and de-dupes against it the same way.
     """
 
-    def __init__(self, registry: Registry) -> None:
+    def __init__(self, registry: Registry, defs: dict[str, dict]) -> None:
         self.registry = registry
+        self.defs = defs
         self._inline: list[Model] = []
 
     def take_inline(self) -> list[Model]:
@@ -723,8 +737,11 @@ class TypeCompiler:
             if found := map_key_names(variants):
                 keys, depth = tuple(found), 0
 
+        if REF_KEY in schema:
+            return self._ref(schema[REF_KEY])
+
         if ENUM_KEY in schema:
-            return self.registry.enum(schema[ENUM_KEY], path)
+            return self._enum(schema, path)
 
         if ANY_OF_KEY in schema:
             return self._any_of(schema[ANY_OF_KEY], path, name, keys, depth)
@@ -746,6 +763,26 @@ class TypeCompiler:
         return ANY_TYPE
 
     # --- branches ---
+
+    def _ref(self, ref: str) -> str:
+        def_name = ref.removeprefix(REF_PREFIX)
+        return self.compile(self.defs[def_name], f"{DEFS_KEY}.{def_name}", def_name)
+
+    def _enum(self, schema: dict, path: str) -> str:
+        """A titled enum becomes a class; an untitled one stays a `Literal`.
+
+        The title is the schema saying "this value set is a thing with a name
+        and a life of its own". Without one, the members are just the values
+        this one field accepts, and inlining them keeps a single-use set from
+        becoming a public class nobody asked for.
+        """
+
+        values = schema[ENUM_KEY]
+
+        if title := schema.get(TITLE_KEY):
+            return self.registry.enum(title, values, path)
+
+        return f"{LITERAL_TYPE}[{', '.join(repr(v) for v in values)}]"
 
     def _const(self, value: Any) -> str:
         kind = {bool: "boolean", int: "integer", float: "number", str: "string"}.get(type(value))
@@ -793,10 +830,11 @@ class TypeCompiler:
         if not isinstance(value_schema, dict):
             return f"{DICT_TYPE}[{DEFAULT_KEY_TYPE}, {ANY_TYPE}]"
 
-        # `propertyNames` states the key set outright; failing that, fall back
-        # to the name the prose gave this depth, run through the scalar hints.
-        if (names := schema.get(PROPERTY_NAMES_KEY)) and ENUM_KEY in names:
-            key = self.registry.enum(names[ENUM_KEY], f"{path}.{KEY_SEGMENT}")
+        # `propertyNames` states the key set outright (inline or via `$ref`);
+        # failing that, fall back to the name the prose gave this depth, run
+        # through the scalar hints.
+        if names := schema.get(PROPERTY_NAMES_KEY):
+            key = self.compile(names, f"{path}.{PROPERTY_NAMES_KEY}")
         else:
             documented = keys[depth] if depth < len(keys) else ""
             key = SCALAR_HINTS.get((documented, "string"), DEFAULT_KEY_TYPE)
@@ -923,11 +961,11 @@ def emit_init(package: str, modules: list[str], exported: list[str]) -> None:
 # Driver
 # ===========================================================================
 
-def build(schema: dict[str, dict]) -> Registry:
+def build(source: dict) -> Registry:
     registry = Registry()
-    compiler = TypeCompiler(registry)
+    compiler = TypeCompiler(registry, source.get(DEFS_KEY, {}))
 
-    for name, spec in schema.items():
+    for name, spec in source[ENDPOINTS_KEY].items():
         result_schema = spec[RESPONSE_KEY][PROPERTIES_KEY][RESULT_KEY]
         result_path = f"{name}.{RESULT_KEY}"
 
@@ -963,12 +1001,11 @@ def build(schema: dict[str, dict]) -> Registry:
 
 
 def start() -> None:
-    with open(SOURCE, "r", encoding=ENCODING) as f:
-        schema: dict[str, dict] = json.load(f)
+    source: dict = json.loads(SOURCE.read_text(encoding=ENCODING))
 
-    print(f"compiling {len(schema)} methods from {SOURCE.name}")
+    print(f"compiling {len(source[ENDPOINTS_KEY])} methods from {SOURCE.name}")
 
-    registry = build(schema)
+    registry = build(source)
     table = registry.symbol_table()
 
     for package in PACKAGES:
