@@ -6,10 +6,10 @@ import requests
 import json
 
 BASE_URL = "https://wolf-tg.com"
-BASE = Path(__file__).parent.parent.parent
+BASE = Path(__file__).parent.parent
 
-ERRORS = (BASE / "compiler/errors/source.json", f"{BASE_URL}/api/json_erros", 5, "start")
-SCHEMA = (BASE / "compiler/schema/source.json", f"{BASE_URL}/api/schema_erros", 5, "start")
+ERRORS = (BASE / "compiler/errors/source.json", f"{BASE_URL}/api/json_errors", 5, "start")
+SCHEMA = (BASE / "compiler/schema/source.json", f"{BASE_URL}/api/json_schema", 5, "start")
 
 
 
@@ -34,7 +34,7 @@ def start():
             continue
 
         file.write_text(
-            json.dumps(r.json(), indent=4, ensure_ascii=False, sort_keys=True), 
+            json.dumps(r.json(), indent=4, ensure_ascii=False), 
             encoding="utf-8"
         )
 
