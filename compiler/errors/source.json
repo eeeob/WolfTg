@@ -21,7 +21,6 @@
         "_": "FORBIDDEN",
         "INVALID_SELLER_ACCOUNT_OWNER": "You are not the owner of this sold account",
         "INVALID_BUYER_ACCOUNT_OWNER": "You are not the owner of this buy account",
-        "INVALID_REQUESTER": "You are not the valid Requester",
         "NUMBER_BLOCKED_FROM_SELL": "This phone number is blocked from selling. Reason: {value}",
         "ATTEMPTS_EXHAUSTED": "No remaining attempts left",
         "USER_BANNED_FROM_API": "You are banned from using the API. Ban duration: {value}s",

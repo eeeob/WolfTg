@@ -11,8 +11,14 @@ from enum import auto
 import pytest
 
 from WolfTg._compat import Never, Self, StrEnum
-from WolfTg.enums import AccountOperation, AccountSection, BuySessionType
-from WolfTg.enums.others import OrderStatus, SendCodeType, UserBalanceType
+from WolfTg.enums import (
+    AccountOperation,
+    AccountSection,
+    BuySessionType,
+    OrderStatus,
+    SendCodeType,
+    UserBalanceType,
+)
 from WolfTg.methods import BuySessions
 
 

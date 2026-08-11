@@ -21,12 +21,6 @@ class InvalidBuyerAccountOwner(Forbidden):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class InvalidRequester(Forbidden):
-    """You are not the valid Requester"""
-    ID = "INVALID_REQUESTER"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 class NumberBlockedFromSell(Forbidden):
     """This phone number is blocked from selling. Reason: {value}"""
     ID = "NUMBER_BLOCKED_FROM_SELL"
@@ -63,7 +57,6 @@ __all__ = (
     "Forbidden", 
     "InvalidSellerAccountOwner", 
     "InvalidBuyerAccountOwner", 
-    "InvalidRequester", 
     "NumberBlockedFromSell", 
     "AttemptsExhausted", 
     "UserBannedFromApi", 

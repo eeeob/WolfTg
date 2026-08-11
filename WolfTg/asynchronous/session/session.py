@@ -1,6 +1,6 @@
 from typing import Optional, TYPE_CHECKING
 
-from ...typings import Number
+from ...utils.typings import Number
 from ...errors import TooManyRequests
 from ...methods import ApiMethod
 from ...types import ApiType

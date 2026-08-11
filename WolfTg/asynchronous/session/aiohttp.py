@@ -1,7 +1,7 @@
 from typing import Optional
 from aiohttp import ClientSession, TCPConnector, ClientTimeout
 
-from ...typings import Number
+from ...utils.typings import Number
 from .session import AsyncIoSession
 
 

@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from WolfTg.methods import Response
-from WolfTg.types.buy import BuySessionsResult
+from WolfTg.types import BuySessionsResult
 
 
 def test_success_response_requires_no_error_fields():

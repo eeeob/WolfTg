@@ -8,7 +8,7 @@ from .errors import ApiError, InvalidResponseError, ResponseValidationError, Too
 from .methods import ApiMethod, Response
 from .models import RequestData
 from .types import ApiType
-from .typings import Number
+from .utils.typings import Number
 
 import json
 import logging

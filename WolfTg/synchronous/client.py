@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Optional, Type, Tuple
 
 from .._compat import Self
-from ..typings import Number
+from ..utils.typings import Number
 from ..utils import (
     iscoroutinefunction_wrapped, 
     safe_call, 
