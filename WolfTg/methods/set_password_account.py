@@ -25,11 +25,11 @@ class SetPasswordAccount(ApiMethod[SetPasswordAccountResult]):
     __returning__ = SetPasswordAccountResult
     __request_method__ = "POST"
 
-    phone_number: ValidPhoneNumber
-    """Telegram account phone number in international E.164 format, including the leading '+'."""
-
     password: str
     """Two-step verification password for an account awaiting password confirmation."""
+
+    phone_number: ValidPhoneNumber
+    """Telegram account phone number in international E.164 format, including the leading '+'."""
 
 __all__ = (
     "SetPasswordAccount", 

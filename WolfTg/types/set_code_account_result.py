@@ -5,11 +5,11 @@ from ..utils.typings import Number, ValidPhoneNumber
 from .base import ApiObject
 
 class SetCodeAccountResult(ApiObject):
-    phone_number: ValidPhoneNumber
-    """Telegram account phone number in international E.164 format, including the leading '+'."""
-
     checked_at: Number
     """Unix timestamp (seconds, UTC) at which the account's automated checking period completes."""
+
+    phone_number: ValidPhoneNumber
+    """Telegram account phone number in international E.164 format, including the leading '+'."""
 
 __all__ = (
     "SetCodeAccountResult", 

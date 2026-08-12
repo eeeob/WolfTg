@@ -9,12 +9,6 @@ class NotFound(ApiError):
     """``int``: Error Code"""
     NAME = __doc__
 
-class PhoneNumberUnoccupied(NotFound):
-    """The phone number is not registered on Telegram"""
-    ID = "PHONE_NUMBER_UNOCCUPIED"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 class NotFoundOtpCode(NotFound):
     """OTP code is not available for this session at the moment"""
     ID = "NOT_FOUND_OTP_CODE"
@@ -27,12 +21,18 @@ class OrderNotFound(NotFound):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
+class PhoneNumberUnoccupied(NotFound):
+    """The phone number is not registered on Telegram"""
+    ID = "PHONE_NUMBER_UNOCCUPIED"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
 
 
 __all__ = (
     "NotFound", 
-    "PhoneNumberUnoccupied", 
     "NotFoundOtpCode", 
     "OrderNotFound", 
+    "PhoneNumberUnoccupied", 
 )
 

@@ -14,24 +14,24 @@ class _GetCountryInfoBuyOptions(ApiObject):
 
 class _GetCountryInfoSellOptions(ApiObject):
     is_open: bool
-    price: Optional[Number] = None
     checking_time: Optional[int] = None
+    price: Optional[Number] = None
 
 class GetCountryInfoResult(ApiObject):
-    name: str
-    """English country name."""
+    buy_options: Dict[AccountSection, _GetCountryInfoBuyOptions]
+    """Buying availability per quality tier. 'price' and 'qty' are omitted when the tier is closed or out of stock."""
 
     country_code: int
     """International dialing prefix, without the leading '+'."""
 
-    region_code: ValidRegionCode
-    """ISO 3166-1 alpha-2 country code, uppercased."""
-
     flag: str
     """Country flag as a Unicode regional-indicator emoji."""
 
-    buy_options: Dict[AccountSection, _GetCountryInfoBuyOptions]
-    """Buying availability per quality tier. 'price' and 'qty' are omitted when the tier is closed or out of stock."""
+    name: str
+    """English country name."""
+
+    region_code: ValidRegionCode
+    """ISO 3166-1 alpha-2 country code, uppercased."""
 
     sell_options: Dict[AccountSection, _GetCountryInfoSellOptions]
     """Selling availability per quality tier. 'price' and 'checking_time' are omitted when the tier is closed or unconfigured."""

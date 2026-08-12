@@ -35,11 +35,11 @@ class SetCodeAccount(ApiMethod[SetCodeAccountResult]):
     __returning__ = SetCodeAccountResult
     __request_method__ = "POST"
 
-    phone_number: ValidPhoneNumber
-    """Telegram account phone number in international E.164 format, including the leading '+'."""
-
     code: ValidTgOtpCode
     """Telegram login verification code. Embedded spaces are stripped before validation."""
+
+    phone_number: ValidPhoneNumber
+    """Telegram account phone number in international E.164 format, including the leading '+'."""
 
     password: Optional[str] = None
     """Two-step verification password, supplied upfront. When the account requires one, it is applied immediately instead of returning SESSION_PASSWORD_NEEDED."""

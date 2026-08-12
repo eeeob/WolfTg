@@ -9,9 +9,9 @@ class BadRequest(ApiError):
     """``int``: Error Code"""
     NAME = __doc__
 
-class InvalidVerificationCode(BadRequest):
-    """The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"""
-    ID = "INVALID_VERIFICATION_CODE"
+class ChangedPassword(BadRequest):
+    """The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}"""
+    ID = "CHANGED_PASSWORD"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -21,9 +21,9 @@ class ExpiredVerificationCode(BadRequest):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class InvalidPhoneNumber(BadRequest):
-    """The phone_number is invalid. It may be prohibited, restricted, etc. The operation was cancelled."""
-    ID = "INVALID_PHONE_NUMBER"
+class InvalidContentType(BadRequest):
+    """Content-Type must be application/json"""
+    ID = "INVALID_CONTENT_TYPE"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -33,15 +33,9 @@ class InvalidPassword(BadRequest):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class ChangedPassword(BadRequest):
-    """The password is Changed. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds. Hint: {value[hint]}"""
-    ID = "CHANGED_PASSWORD"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
-class InvalidContentType(BadRequest):
-    """Content-Type must be application/json"""
-    ID = "INVALID_CONTENT_TYPE"
+class InvalidPhoneNumber(BadRequest):
+    """The phone_number is invalid. It may be prohibited, restricted, etc. The operation was cancelled."""
+    ID = "INVALID_PHONE_NUMBER"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -51,16 +45,22 @@ class InvalidUserId(BadRequest):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
+class InvalidVerificationCode(BadRequest):
+    """The verification code is invalid. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"""
+    ID = "INVALID_VERIFICATION_CODE"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
 
 
 __all__ = (
     "BadRequest", 
-    "InvalidVerificationCode", 
-    "ExpiredVerificationCode", 
-    "InvalidPhoneNumber", 
-    "InvalidPassword", 
     "ChangedPassword", 
+    "ExpiredVerificationCode", 
     "InvalidContentType", 
+    "InvalidPassword", 
+    "InvalidPhoneNumber", 
     "InvalidUserId", 
+    "InvalidVerificationCode", 
 )
 

@@ -13,17 +13,17 @@ class GetSellAccountStatResult(ApiObject):
     stat: Literal['code_checking', 'password_checking', 'wait_checking']
     """Current stage of the sell flow. Any other state raises an error instead of being reported."""
 
+    checked_at: Optional[Number] = None
+    """Unix timestamp (seconds, UTC) at which the automated checking period completes. Present for 'wait_checking' only."""
+
+    hint: Optional[str] = None
+    """Two-step verification password hint set on the account. Present for 'password_checking' only, and only when the account defines a hint."""
+
     remaining_attempts: Optional[int] = None
     """Submission attempts left for the current stage. Present for 'code_checking' and 'password_checking' only."""
 
     seconds: Optional[Number] = None
     """Seconds left before the current stage expires and the account is released. Present for 'code_checking' and 'password_checking' only."""
-
-    hint: Optional[str] = None
-    """Two-step verification password hint set on the account. Present for 'password_checking' only, and only when the account defines a hint."""
-
-    checked_at: Optional[Number] = None
-    """Unix timestamp (seconds, UTC) at which the automated checking period completes. Present for 'wait_checking' only."""
 
 __all__ = (
     "GetSellAccountStatResult", 

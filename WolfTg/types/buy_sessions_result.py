@@ -6,11 +6,20 @@ from ..enums import AccountSection, BuySessionType, OrderStatus
 from .base import ApiObject
 
 class BuySessionsResult(ApiObject):
+    country_code: ValidRegionCode
+    """ISO 3166-1 alpha-2 country code the sessions were ordered for, uppercased."""
+
+    force_full: bool
+    """Whether the order requires the full quantity to be delivered or fails."""
+
     id: str
     """Order identifier, used to poll delivery progress via GetBuySessionsOrder."""
 
-    country_code: ValidRegionCode
-    """ISO 3166-1 alpha-2 country code the sessions were ordered for, uppercased."""
+    include_json: bool
+    """Whether a JSON metadata file is delivered alongside each session."""
+
+    qty: int
+    """Number of sessions requested in this order."""
 
     section: AccountSection
     """Quality tier the sessions were ordered for."""
@@ -18,20 +27,11 @@ class BuySessionsResult(ApiObject):
     session_type: BuySessionType
     """Session file format being delivered."""
 
-    qty: int
-    """Number of sessions requested in this order."""
-
-    force_full: bool
-    """Whether the order requires the full quantity to be delivered or fails."""
-
-    include_json: bool
-    """Whether a JSON metadata file is delivered alongside each session."""
+    ready_count: int = 0
+    """Number of sessions prepared and ready for delivery so far."""
 
     status: OrderStatus = OrderStatus.PENDING
     """Current lifecycle stage of the order."""
-
-    ready_count: int = 0
-    """Number of sessions prepared and ready for delivery so far."""
 
 __all__ = (
     "BuySessionsResult", 

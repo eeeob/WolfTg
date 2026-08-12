@@ -9,9 +9,9 @@ class Forbidden(ApiError):
     """``int``: Error Code"""
     NAME = __doc__
 
-class InvalidSellerAccountOwner(Forbidden):
-    """You are not the owner of this sold account"""
-    ID = "INVALID_SELLER_ACCOUNT_OWNER"
+class AttemptsExhausted(Forbidden):
+    """No remaining attempts left"""
+    ID = "ATTEMPTS_EXHAUSTED"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -21,15 +21,15 @@ class InvalidBuyerAccountOwner(Forbidden):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class NumberBlockedFromSell(Forbidden):
-    """This phone number is blocked from selling. Reason: {value}"""
-    ID = "NUMBER_BLOCKED_FROM_SELL"
+class InvalidSellerAccountOwner(Forbidden):
+    """You are not the owner of this sold account"""
+    ID = "INVALID_SELLER_ACCOUNT_OWNER"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class AttemptsExhausted(Forbidden):
-    """No remaining attempts left"""
-    ID = "ATTEMPTS_EXHAUSTED"
+class NumberBlockedFromSell(Forbidden):
+    """This phone number is blocked from selling. Reason: {value}"""
+    ID = "NUMBER_BLOCKED_FROM_SELL"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -39,15 +39,15 @@ class UserBannedFromApi(Forbidden):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class UserBannedFromSelling(Forbidden):
-    """You are banned from selling accounts. Ban duration: {value}s"""
-    ID = "USER_BANNED_FROM_SELLING"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 class UserBannedFromBuying(Forbidden):
     """You are banned from buying accounts. Ban duration: {value}s"""
     ID = "USER_BANNED_FROM_BUYING"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
+class UserBannedFromSelling(Forbidden):
+    """You are banned from selling accounts. Ban duration: {value}s"""
+    ID = "USER_BANNED_FROM_SELLING"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -55,12 +55,12 @@ class UserBannedFromBuying(Forbidden):
 
 __all__ = (
     "Forbidden", 
-    "InvalidSellerAccountOwner", 
-    "InvalidBuyerAccountOwner", 
-    "NumberBlockedFromSell", 
     "AttemptsExhausted", 
+    "InvalidBuyerAccountOwner", 
+    "InvalidSellerAccountOwner", 
+    "NumberBlockedFromSell", 
     "UserBannedFromApi", 
-    "UserBannedFromSelling", 
     "UserBannedFromBuying", 
+    "UserBannedFromSelling", 
 )
 

@@ -9,9 +9,29 @@ class Conflict(ApiError):
     """``int``: Error Code"""
     NAME = __doc__
 
-class InvalidSellSessionStat(Conflict):
-    """Sell session is not in a valid stat to perform this operation"""
-    ID = "INVALID_SELL_SESSION_STAT"
+class AccountDeadDuringGetCode(Conflict):
+    """Account became dead during code retrieval process"""
+    ID = "ACCOUNT_DEAD_DURING_GET_CODE"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
+class AccountForBuySectionClosed(Conflict):
+    """Buying is not allowed for {context[country]} country {context[section]} account section at the moment"""
+    ID = "ACCOUNT_FOR_BUY_SECTION_CLOSED"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+    STORE_VALUE = False
+
+class AccountForSellSectionClosed(Conflict):
+    """Selling is not allowed for {context[country]} country {context[section]} account section at the moment"""
+    ID = "ACCOUNT_FOR_SELL_SECTION_CLOSED"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+    STORE_VALUE = False
+
+class AccountPurchaseAttemptsExhausted(Conflict):
+    """All purchase attempts have been exhausted without acquiring an account"""
+    ID = "ACCOUNT_PURCHASE_ATTEMPTS_EXHAUSTED"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -21,35 +41,15 @@ class ExpiredStat(Conflict):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class AccountForSellSectionClosed(Conflict):
-    """Selling is not allowed for {context[country]} country {context[section]} account section at the moment"""
-    ID = "ACCOUNT_FOR_SELL_SECTION_CLOSED"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-    STORE_VALUE = False
-
-class AccountForBuySectionClosed(Conflict):
-    """Buying is not allowed for {context[country]} country {context[section]} account section at the moment"""
-    ID = "ACCOUNT_FOR_BUY_SECTION_CLOSED"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-    STORE_VALUE = False
-
-class SessionAlreadyExists(Conflict):
-    """A session already exists for this phone number"""
-    ID = "SESSION_ALREADY_EXISTS"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
-class SellAccountStatAlreadyExists(Conflict):
-    """A sell process already exists for this account"""
-    ID = "SELL_ACCOUNT_STAT_ALREADY_EXISTS"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 class InsufficientBalance(Conflict):
     """You are does not have enough balance for this operation"""
     ID = "INSUFFICIENT_BALANCE"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
+class InvalidSellSessionStat(Conflict):
+    """Sell session is not in a valid stat to perform this operation"""
+    ID = "INVALID_SELL_SESSION_STAT"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -59,15 +59,15 @@ class NoAccountsAvailableForCountry(Conflict):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class AccountPurchaseAttemptsExhausted(Conflict):
-    """All purchase attempts have been exhausted without acquiring an account"""
-    ID = "ACCOUNT_PURCHASE_ATTEMPTS_EXHAUSTED"
+class SellAccountStatAlreadyExists(Conflict):
+    """A sell process already exists for this account"""
+    ID = "SELL_ACCOUNT_STAT_ALREADY_EXISTS"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class AccountDeadDuringGetCode(Conflict):
-    """Account became dead during code retrieval process"""
-    ID = "ACCOUNT_DEAD_DURING_GET_CODE"
+class SessionAlreadyExists(Conflict):
+    """A session already exists for this phone number"""
+    ID = "SESSION_ALREADY_EXISTS"
     """``str``: Error ID"""
     MESSAGE = __doc__
 
@@ -75,15 +75,15 @@ class AccountDeadDuringGetCode(Conflict):
 
 __all__ = (
     "Conflict", 
-    "InvalidSellSessionStat", 
-    "ExpiredStat", 
-    "AccountForSellSectionClosed", 
-    "AccountForBuySectionClosed", 
-    "SessionAlreadyExists", 
-    "SellAccountStatAlreadyExists", 
-    "InsufficientBalance", 
-    "NoAccountsAvailableForCountry", 
-    "AccountPurchaseAttemptsExhausted", 
     "AccountDeadDuringGetCode", 
+    "AccountForBuySectionClosed", 
+    "AccountForSellSectionClosed", 
+    "AccountPurchaseAttemptsExhausted", 
+    "ExpiredStat", 
+    "InsufficientBalance", 
+    "InvalidSellSessionStat", 
+    "NoAccountsAvailableForCountry", 
+    "SellAccountStatAlreadyExists", 
+    "SessionAlreadyExists", 
 )
 

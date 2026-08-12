@@ -9,6 +9,18 @@ class Unauthorized(ApiError):
     """``int``: Error Code"""
     NAME = __doc__
 
+class MissingAuthenticationHeaders(Unauthorized):
+    """Authentication headers are missing"""
+    ID = "MISSING_AUTHENTICATION_HEADERS"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
+class OrderAccessDenied(Unauthorized):
+    """You are not authorized to access this order"""
+    ID = "ORDER_ACCESS_DENIED"
+    """``str``: Error ID"""
+    MESSAGE = __doc__
+
 class SessionPasswordNeeded(Unauthorized):
     """Two-step verification password is required to complete authentication for {value[account]}. Password hint: {value[hint]}. You have {value[attempts]} attempts remaining Within {value[seconds]} seconds"""
     ID = "SESSION_PASSWORD_NEEDED"
@@ -27,26 +39,14 @@ class UserApiKeyRevoked(Unauthorized):
     """``str``: Error ID"""
     MESSAGE = __doc__
 
-class MissingAuthenticationHeaders(Unauthorized):
-    """Authentication headers are missing"""
-    ID = "MISSING_AUTHENTICATION_HEADERS"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
-class OrderAccessDenied(Unauthorized):
-    """You are not authorized to access this order"""
-    ID = "ORDER_ACCESS_DENIED"
-    """``str``: Error ID"""
-    MESSAGE = __doc__
-
 
 
 __all__ = (
     "Unauthorized", 
+    "MissingAuthenticationHeaders", 
+    "OrderAccessDenied", 
     "SessionPasswordNeeded", 
     "UserApiKeyNotFound", 
     "UserApiKeyRevoked", 
-    "MissingAuthenticationHeaders", 
-    "OrderAccessDenied", 
 )
 

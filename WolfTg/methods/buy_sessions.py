@@ -32,14 +32,14 @@ class BuySessions(ApiMethod[BuySessionsResult]):
     country_code: ValidRegionCode
     """ISO 3166-1 alpha-2 country code. Case-insensitive on input, normalized to lowercase."""
 
+    qty: int = Field(gt=0)
+    """Number of sessions to order. Must be greater than zero."""
+
     section: AccountSection
     """Quality tier of the sessions to buy. Determines pricing and availability."""
 
     session_type: BuySessionType
     """Session file format to deliver. The '*_string' variants return a session string instead of a file."""
-
-    qty: int = Field(gt=0)
-    """Number of sessions to order. Must be greater than zero."""
 
     force_full: bool = False
     """When true, the order fails unless the full requested quantity can be delivered; otherwise a partial delivery is accepted."""

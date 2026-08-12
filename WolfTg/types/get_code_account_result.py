@@ -5,14 +5,14 @@ from ..utils.typings import ValidPhoneNumber
 from .base import ApiObject
 
 class GetCodeAccountResult(ApiObject):
-    phone_number: ValidPhoneNumber
-    """Telegram account phone number in international E.164 format, including the leading '+'."""
-
     code: int
     """Telegram login code retrieved from the purchased account."""
 
     password: str
     """Two-step verification password set on the purchased account."""
+
+    phone_number: ValidPhoneNumber
+    """Telegram account phone number in international E.164 format, including the leading '+'."""
 
 __all__ = (
     "GetCodeAccountResult", 
