@@ -52,7 +52,7 @@ dependencies = [
     "requests>=2.32,<3.0",
     "pydantic>=2.7,<3.0",
     "aiohttp[speedups]>=3.9,<4.0",
-    "aldheeb-pytools[country,phone]>=0.3.3,<0.4",
+    "pytrove[country,phone]>=1.0.0,<2.0.0",
     "typing-extensions>=4.0; python_version < '3.11'",
 ]
 

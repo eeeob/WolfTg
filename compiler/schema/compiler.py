@@ -149,7 +149,7 @@ TYPING_NAMES = frozenset((
     ANY_TYPE, DICT_TYPE, LITERAL_TYPE, OPTIONAL_TYPE, UNION_TYPE, "List", "Tuple",
 ))
 
-# Imported from TYPINGS_MODULE. `Number` arrives there from `pytools.typings`,
+# Imported from TYPINGS_MODULE. `Number` arrives there from `pytrove.typings`,
 # which `WolfTg.utils.typings` re-exports wholesale.
 SCALAR_NAMES = frozenset(SCALAR_HINTS.values()) | {NUMBER_TYPE}
 

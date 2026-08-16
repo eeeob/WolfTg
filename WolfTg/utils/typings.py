@@ -1,10 +1,10 @@
 from typing import Annotated, TypeAlias
 from pydantic import AfterValidator
 
-from pytools.typings import *
-from pytools.typings import __all__ as all_pytools
+from pytrove.typings import *
+from pytrove.typings import __all__ as all_pytrove
 
-import pytools as _ut
+import pytrove as _ut
 
 ValidPhoneNumber: TypeAlias = Annotated[
     PhoneNumber,
@@ -36,7 +36,7 @@ ValidTgOtpCode: TypeAlias = Annotated[
 
 
 __all__ = (
-    *all_pytools,
+    *all_pytrove,
     "ValidPhoneNumber",
     "ValidRegionCode",
     "ValidTgOtpCode",
