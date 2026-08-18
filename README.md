@@ -29,6 +29,13 @@ For the latest updates directly from GitHub (not tied to a released version):
 ```bash
 pip install git+https://github.com/eeeob/WolfTg.git --force-reinstall
 ```
+### 🔹 Without Deps
+```bash
+pip install git+https://github.com/eeeob/WolfTg.git --force-reinstall --no-deps
+```
+---
+
+
 
 ## Quick Start
 
